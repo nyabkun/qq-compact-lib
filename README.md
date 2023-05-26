@@ -162,3 +162,11 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 }
 ```
+
+## My Compact Libraries
+
+The following libraries are all extracted from my codebase using this library.
+
+- [qq-benchmark](https://github.com/nyabkun/qq-benchmark)
+- [qq-shell-color](https://github.com/nyabkun/qq-shell-color)
+- [qq-tree](https://github.com/nyabkun/qq-tree)
