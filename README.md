@@ -32,6 +32,20 @@ When you run the `gralde qRunExample` command in this repository, it analyzes th
 
 ```kotlin
 fun main(): Unit = runBlocking {
+    // build includes
+    // - analyse src dirs
+    // - create compact src code
+    //   - single-file version
+    //   - split-file version
+    // - create test src code ( if exists )
+    //   - single-file version
+    //   - split-file version
+    // - create example src code
+    // - create build.gradle.kts
+    // - create jars
+    // - create README.md, LICENSE, .gitignore, etc
+    // - run test ( if exists )
+    // - run example
     val result = build()
 
     // git task includes
