@@ -139,11 +139,12 @@ Refer to [build.gradle.kts](build.gradle.kts) to directly check project settings
 
 ```kotlin
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.8.20")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.20")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.20")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+  implementation("org.apache.httpcomponents:httpclient:4.5.14")
+  implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.8.20")
+  implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.20")
+  implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.20")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 }
 ```
 
