@@ -12,18 +12,56 @@ package nyab.compact
 
 import kotlin.reflect.KClass
 import nyab.conf.QE
+import nyab.conf.QMyMark
+import nyab.util.QOut
+import nyab.util.QShColor
+import nyab.util.QUnit
+import nyab.util.light_gray
+import nyab.util.qColor
 import nyab.util.qEnumValues
+import nyab.util.qFormatDuration
 import nyab.util.throwItBrackets
 
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
 // << Root of the CallChain >>
-class QPhase<E : Enum<E>>(cls: KClass<E>) {
+class QPhase<E : Enum<E>>(cls: KClass<E>,
+                          val label: String = cls.simpleName!!,
+                          val out: QOut = QOut.CONSOLE,
+                          val fg: QShColor = QShColor.Blue,
+                          val bg: QShColor? = null,
+                          val longTaskBorderMillis: Long = 1000) {
     // << Root of the CallChain >>
     val phases = cls.qEnumValues()
     // << Root of the CallChain >>
     var current = phases[0]
+    // << Root of the CallChain >>
+    var currentPhaseStartTime = System.currentTimeMillis()
+    // << Root of the CallChain >>
+    val time: MutableMap<E, Long> = mutableMapOf()
+
+    // << Root of the CallChain >>
+    init {
+        printPhaseTime()
+    }
+
+    // << Root of the CallChain >>
+    private fun printPhaseTime() {
+        if( current.ordinal == 0 )
+            return
+
+        val time = System.currentTimeMillis() - currentPhaseStartTime
+        this.time[current] = time
+
+        val isLongTask = time > longTaskBorderMillis
+
+        val timeStr = time.qFormatDuration(QUnit.Milli).trim()
+
+        val mark = if( isLongTask ) QMyMark.phase_start_long_task else QMyMark.phase_start
+
+        out.println("$mark ${label}: ${current.name.qColor(fg = fg, bg = bg)}\n${"...".light_gray}  $timeStr")
+    }
 
     // << Root of the CallChain >>
     fun nextPhase(next: E) {
@@ -34,7 +72,10 @@ class QPhase<E : Enum<E>>(cls: KClass<E>) {
             )
         }
 
+        printPhaseTime()
+
         current = next
+        currentPhaseStartTime = System.currentTimeMillis()
     }
 
     // << Root of the CallChain >>
@@ -43,8 +84,13 @@ class QPhase<E : Enum<E>>(cls: KClass<E>) {
     }
 
     // << Root of the CallChain >>
-    fun isFinishedOrWorking(phase: E): Boolean {
-        return phase.ordinal < current.ordinal
+    fun isNotFinished(phase: E): Boolean {
+        return !isFinished(phase)
+    }
+
+    // << Root of the CallChain >>
+    fun isFinishedOrWorkingOn(phase: E): Boolean {
+        return phase.ordinal <= current.ordinal
     }
 
     // << Root of the CallChain >>
@@ -53,17 +99,12 @@ class QPhase<E : Enum<E>>(cls: KClass<E>) {
     }
 
     // << Root of the CallChain >>
-    fun checkFinishedOrWorking(phase: E) {
-        check(isFinishedOrWorking(phase))
+    fun checkFinishedOrWorkingOn(phase: E) {
+        check(isFinishedOrWorkingOn(phase))
     }
 
     // << Root of the CallChain >>
     fun checkNotFinished(phase: E) {
         check(!isFinished(phase))
-    }
-
-    // << Root of the CallChain >>
-    fun isNotFinished(phase: E): Boolean {
-        return !isFinished(phase)
     }
 }

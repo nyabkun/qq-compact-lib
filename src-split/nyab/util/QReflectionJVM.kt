@@ -13,6 +13,7 @@
 package nyab.util
 
 import java.lang.reflect.Field
+import java.lang.reflect.Method
 import java.nio.charset.Charset
 import java.nio.file.Path
 import kotlin.io.path.bufferedReader
@@ -80,6 +81,17 @@ internal inline fun <reified T> Any.qFieldValues(matcher: QMField = QMField.Decl
     return fields.map { it.get(this) as T }.toList()
 }
 
+// CallChain[size=7] = Class<*>.qMethod() <-[Call]- Class<*>.qMethod() <-[Call]- qGetMethodByFqName( ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun Class<*>.qMethod(declaredOnly: Boolean = false, find: (Method) -> Boolean): Method {
+    val allMethods = if (declaredOnly) declaredMethods else methods
+    return allMethods.find(find).qaNotNull(QE.MethodNotFound)
+}
+
+// CallChain[size=6] = Class<*>.qMethod() <-[Call]- qGetMethodByFqName() <-[Call]- KClass<*>.qContai ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun Class<*>.qMethod(name: String, declaredOnly: Boolean = false): Method {
+    return qMethod(declaredOnly) { it.name == name }
+}
+
 // CallChain[size=10] = Class<*>.qPrimitiveToWrapper() <-[Call]- Class<*>.qIsAssignableFrom() <-[Cal ... FieldValues() <-[Call]- QMyDepI.ALL <-[Propag]- QMyDepI <-[Ref]- QMyDep <-[Ref]- QCompactLib[Root]
 internal fun Class<*>.qPrimitiveToWrapper(): Class<*> = qJVMPrimitiveToWrapperMap[this] ?: this
 
@@ -105,6 +117,19 @@ internal fun Class<*>.qIsAssignableFrom(subclass: Class<*>, autoboxing: Boolean 
     } else {
         this.isAssignableFrom(subclass)
     }
+}
+
+// CallChain[size=5] = qGetMethodByFqName() <-[Call]- KClass<*>.qContainingFileMainMethod() <-[Call] ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun qGetMethodByFqName(methodFqName: String): Method {
+    val clsName = methodFqName.substring(0, methodFqName.lastIndexOf('.'))
+    val methodName = methodFqName.substring(methodFqName.lastIndexOf('.') + 1, methodFqName.length)
+    val cls = Class.forName(clsName)
+    return cls.qMethod(methodName, declaredOnly = true)
+}
+
+// CallChain[size=5] = Method.qFqName() <-[Call]- qRunMethodInNewJVMProcess() <-[Call]- QGit.renameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun Method.qFqName(): String {
+    return this.declaringClass.name + "." + this.name
 }
 
 // CallChain[size=3] = qCallerPackageName() <-[Call]- qThisFilePackageName <-[Call]- QSingleSrcBase.toSrcCode()[Root]

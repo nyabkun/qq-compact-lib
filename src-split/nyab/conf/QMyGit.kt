@@ -13,9 +13,9 @@ package nyab.conf
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
-// CallChain[size=3] = QMyGit <-[Ref]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=4] = QMyGit <-[Ref]- QGit.init() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
 internal object QMyGit {
-    // CallChain[size=3] = QMyGit.mit_license <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=4] = QMyGit.mit_license <-[Call]- QGit.init() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
     const val mit_license = """MIT License
 
 Copyright (c) 2021 nyabkun
@@ -38,7 +38,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE."""
 
-    // CallChain[size=3] = QMyGit.git_ignore <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=4] = QMyGit.git_ignore <-[Call]- QGit.init() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
     const val git_ignore = """### Java  https://github.com/github/gitignore/blob/main/Java.gitignore
 
 # Compiled class file

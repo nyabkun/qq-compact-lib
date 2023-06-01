@@ -15,28 +15,17 @@ import org.intellij.lang.annotations.Language
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
-// CallChain[size=11] = RO <-[Ref]- String.qReplaceFirstIfNonEmptyStringGroup() <-[Call]- String.qAp ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=7] = RO <-[Ref]- qRe() <-[Call]- QException.mySrcAndStack <-[Call]- QException.pri ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal typealias RO = RegexOption
 
-// CallChain[size=11] = qRe() <-[Call]- String.qReplaceFirstIfNonEmptyStringGroup() <-[Call]- String ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=6] = qRe() <-[Call]- QException.mySrcAndStack <-[Call]- QException.printStackTrace ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal fun qRe(@Language("RegExp") regex: String, vararg opts: RO): Regex {
     return qCacheItOneSecThreadLocal(regex + opts.contentToString()) {
         Regex(regex, setOf(*opts))
     }
 }
 
-// CallChain[size=10] = re <-[Call]- String.qApplyColorNestable() <-[Call]- String.qColorLine() <-[C ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=13] = @receiver:Language("RegExp") String.re <-[Call]- String.noStyle <-[Call]- QC ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 // https://youtrack.jetbrains.com/issue/KTIJ-5643
 internal val @receiver:Language("RegExp") String.re: Regex
     get() = qRe(this)
-
-// CallChain[size=10] = String.qReplaceFirstIfNonEmptyStringGroup() <-[Call]- String.qApplyColorNest ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
-internal fun String.qReplaceFirstIfNonEmptyStringGroup(@Language("RegExp") regex: String, nonEmptyGroupIdx: Int, replace: String = "$1", vararg opts: RO): String {
-    val re = qRe(regex, *opts)
-
-    return if (re.find(this)?.groups?.get(nonEmptyGroupIdx)?.value?.isNotEmpty() == true) {
-        re.replaceFirst(this, replace)
-    } else {
-        this
-    }
-}

@@ -17,15 +17,15 @@ import kotlin.contracts.contract
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
-// CallChain[size=3] = QTimeItResult <-[Ref]- qTimeIt() <-[Call]- QCompactLibAnalysis.analysisResult[Root]
+// CallChain[size=3] = QTimeItResult <-[Ref]- qTimeIt() <-[Call]- qCompactLib()[Root]
 internal class QTimeItResult<T>(val label: String, val time: Long, val result: T) {
-    // CallChain[size=3] = QTimeItResult.toString() <-[Call]- qTimeIt() <-[Call]- QCompactLibAnalysis.analysisResult[Root]
+    // CallChain[size=3] = QTimeItResult.toString() <-[Call]- qTimeIt() <-[Call]- qCompactLib()[Root]
     override fun toString(): String {
         return qBrackets(label, time.qFormatDuration())
     }
 }
 
-// CallChain[size=2] = qTimeIt() <-[Call]- QCompactLibAnalysis.analysisResult[Root]
+// CallChain[size=2] = qTimeIt() <-[Call]- qCompactLib()[Root]
 @OptIn(ExperimentalContracts::class)
 internal inline fun <T> qTimeIt(label: String = qThisSrcLineSignature, quiet: Boolean = false, out: QOut? = QOut.CONSOLE, block: () -> T): QTimeItResult<T> {
     contract {

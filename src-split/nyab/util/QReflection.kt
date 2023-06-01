@@ -13,6 +13,7 @@
 package nyab.util
 
 import java.lang.StackWalker.StackFrame
+import java.lang.reflect.Method
 import java.nio.charset.Charset
 import java.nio.file.Path
 import java.util.*
@@ -32,6 +33,7 @@ import kotlin.reflect.jvm.isAccessible
 import kotlin.streams.asSequence
 import nyab.conf.QE
 import nyab.conf.QMyPath
+import nyab.conf.qSTACK_FRAME_FILTER
 import nyab.match.QM
 import nyab.match.QMFunc
 import nyab.match.and
@@ -39,7 +41,29 @@ import nyab.match.and
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
-// CallChain[size=6] = KClass<*>.qFunctions() <-[Call]- qToStringRegistry <-[Call]- Any?.qToString() ... l]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=6] = KClass<*>.qPackage() <-[Call]- KClass<*>.qFqNameOfContainingFile() <-[Call]-  ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun KClass<*>.qPackage(): String {
+    return this.java.`package`.name
+}
+
+// CallChain[size=5] = KClass<*>.qFqNameOfContainingFile() <-[Call]- KClass<*>.qContainingFileMainMe ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun KClass<*>.qFqNameOfContainingFile(): String {
+    val pkg = this.qPackage()
+    val cls = this.qSrcFile!!.nameWithoutExtension + "Kt"
+    return if (pkg.isNotEmpty()) {
+        "$pkg.$cls"
+    } else {
+        cls
+    }
+}
+
+// CallChain[size=4] = KClass<*>.qContainingFileMainMethod() <-[Call]- QGit.renameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun KClass<*>.qContainingFileMainMethod(): Method {
+    val fqName = this.qFqNameOfContainingFile()
+    return qGetMethodByFqName("$fqName.main")
+}
+
+// CallChain[size=6] = KClass<*>.qFunctions() <-[Call]- qToStringRegistry <-[Call]- Any.qToString()  ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal fun KClass<*>.qFunctions(matcher: QMFunc = QMFunc.DeclaredOnly and QMFunc.IncludeExtensionsInClass): List<KFunction<*>> {
     val list = mutableListOf<KFunction<*>>()
 
@@ -116,13 +140,32 @@ internal fun <E : Enum<E>> KClass<E>.qEnumValues(): Array<E> {
     return java.enumConstants as Array<E>
 }
 
+// CallChain[size=7] = qCallerClassName() <-[Call]- qThisClassName <-[Call]- qSubProcessMainClassFqN ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun qCallerClassName(stackDepth: Int = 0): String {
+    return qStackFrame(stackDepth + 2).declaringClass.name
+}
+
+// CallChain[size=4] = qThisFilePath <-[Call]- QGit.gitHubDownloadAndUpdateMyself() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal val qThisFilePath: Path
+    get() = qCallerFile()
+
 // CallChain[size=2] = qThisFileName <-[Call]- QSingleSrcBase.toSrcCode()[Root]
 internal val qThisFileName: String
     get() = qCallerFileName()
 
-// CallChain[size=3] = qThisSrcLineSignature <-[Call]- qTimeIt() <-[Call]- QCompactLibAnalysis.analysisResult[Root]
+// CallChain[size=6] = qThisClassName <-[Call]- qSubProcessMainClassFqName <-[Call]- qRunMethodInNew ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal val qThisClassName: String
+    get() = qCallerClassName()
+
+// CallChain[size=3] = qThisSrcLineSignature <-[Call]- qTimeIt() <-[Call]- qCompactLib()[Root]
 internal val qThisSrcLineSignature: String
     get() = qCallerSrcLineSignature()
+
+// CallChain[size=5] = qCallerFile() <-[Call]- qThisFilePath <-[Call]- QGit.gitHubDownloadAndUpdateMyself() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun qCallerFile(stackDepth: Int = 0, srcRoots: List<Path> = QMyPath.src_root): Path {
+    val frame = qStackFrame(stackDepth + 2)
+    return qSrcFileAtFrame(frame, srcRoots = srcRoots)
+}
 
 // CallChain[size=9] = qSrcFileAtFrame() <-[Call]- qSrcFileLinesAtFrame() <-[Call]- qMySrcLinesAtFra ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal fun qSrcFileAtFrame(frame: StackFrame, srcRoots: List<Path> = QMyPath.src_root, pkgDirHint: String? = null): Path = qCacheItOneSec(
@@ -158,7 +201,7 @@ internal fun qCallerFileName(stackDepth: Int = 0): String {
     return qStackFrame(stackDepth + 2).fileName
 }
 
-// CallChain[size=4] = qCallerSrcLineSignature() <-[Call]- qThisSrcLineSignature <-[Call]- qTimeIt() <-[Call]- QCompactLibAnalysis.analysisResult[Root]
+// CallChain[size=6] = qCallerSrcLineSignature() <-[Call]- String.qRunShellScript() <-[Call]- qRunMe ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
 internal fun qCallerSrcLineSignature(stackDepth: Int = 0): String {
     val frame = qStackFrame(stackDepth + 2)
 
@@ -181,7 +224,7 @@ internal fun qCallerSrcLineSignature(stackDepth: Int = 0): String {
 internal inline fun qStackFrames(
         stackDepth: Int = 0,
         size: Int = 1,
-        noinline filter: (StackFrame) -> Boolean = QE.STACK_FRAME_FILTER,
+        noinline filter: (StackFrame) -> Boolean = qSTACK_FRAME_FILTER,
 ): List<StackFrame> {
     return StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE).walk { s: Stream<StackFrame> ->
         s.asSequence().filter(filter).drop(stackDepth).take(size).toList()
@@ -191,12 +234,12 @@ internal inline fun qStackFrames(
 // CallChain[size=9] = qStackFrame() <-[Call]- qSrcFileLinesAtFrame() <-[Call]- qMySrcLinesAtFrame() ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal inline fun qStackFrame(
         stackDepth: Int = 0,
-        noinline filter: (StackFrame) -> Boolean = QE.STACK_FRAME_FILTER,
+        noinline filter: (StackFrame) -> Boolean = qSTACK_FRAME_FILTER,
 ): StackFrame {
     return qStackFrames(stackDepth, 1, filter)[0]
 }
 
-// CallChain[size=7] = KType.qToClass() <-[Call]- KType.qIsSuperclassOf() <-[Call]- qToStringRegistr ... l]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=7] = KType.qToClass() <-[Call]- KType.qIsSuperclassOf() <-[Call]- qToStringRegistr ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal fun KType.qToClass(): KClass<*>? {
     return if (this.classifier != null && this.classifier is KClass<*>) {
         this.classifier as KClass<*>
@@ -205,7 +248,7 @@ internal fun KType.qToClass(): KClass<*>? {
     }
 }
 
-// CallChain[size=6] = KType.qIsSuperclassOf() <-[Call]- qToStringRegistry <-[Call]- Any?.qToString( ... l]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=6] = KType.qIsSuperclassOf() <-[Call]- qToStringRegistry <-[Call]- Any.qToString() ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal fun KType.qIsSuperclassOf(cls: KClass<*>): Boolean {
     return try {
         val thisClass = qToClass()

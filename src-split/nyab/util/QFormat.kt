@@ -12,6 +12,7 @@
 
 package nyab.util
 
+import java.text.DecimalFormat
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -25,34 +26,34 @@ import kotlin.math.abs
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
-// CallChain[size=10] = QZone <-[Ref]- String.qParseDateTime() <-[Call]- Path.qDateTime() <-[Call]-  ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=10] = QZone <-[Ref]- String.qParseDateTime() <-[Call]- Path.qDateTime() <-[Call]-  ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal enum class QZone(val zoneId: ZoneId) {
-    // CallChain[size=10] = QZone.DEFAULT <-[Call]- String.qParseDateTime() <-[Call]- Path.qDateTime() < ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=10] = QZone.DEFAULT <-[Call]- String.qParseDateTime() <-[Call]- Path.qDateTime() < ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     DEFAULT(ZoneOffset.systemDefault()),
-    // CallChain[size=11] = QZone.UTC <-[Propag]- QZone.DEFAULT <-[Call]- String.qParseDateTime() <-[Cal ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=11] = QZone.UTC <-[Propag]- QZone.DEFAULT <-[Call]- String.qParseDateTime() <-[Cal ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     UTC(ZoneOffset.UTC);
 
-    // CallChain[size=12] = QZone.offset() <-[Call]- QLocalDateTimeFormat.parseToEpochMilli() <-[Call]-  ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=12] = QZone.offset() <-[Call]- QLocalDateTimeFormat.parseToEpochMilli() <-[Call]-  ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     fun offset(epochTimeMilli: Long = qNow): ZoneOffset {
         return zoneId.rules.getOffset(Instant.ofEpochMilli(epochTimeMilli))
     }
 }
 
-// CallChain[size=11] = QLocalDateTimeFormat <-[Ref]- _qParseDateTime() <-[Call]- String.qParseDateT ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=11] = QLocalDateTimeFormat <-[Ref]- _qParseDateTime() <-[Call]- String.qParseDateT ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal enum class QLocalDateTimeFormat(val format: String) {
-    // CallChain[size=11] = QLocalDateTimeFormat.DateTime <-[Ref]- _qParseDateTime() <-[Call]- String.qP ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=11] = QLocalDateTimeFormat.DateTime <-[Ref]- _qParseDateTime() <-[Call]- String.qP ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     DateTime("yyyy-MM-dd'T'HH-mm-ss"),
-    // CallChain[size=12] = QLocalDateTimeFormat.Date <-[Call]- QLocalDateTimeFormat.parseToEpochMilli() ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=12] = QLocalDateTimeFormat.Date <-[Call]- QLocalDateTimeFormat.parseToEpochMilli() ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     Date("yyyy-MM-dd"),
-    // CallChain[size=12] = QLocalDateTimeFormat.Time <-[Call]- QLocalDateTimeFormat.parseToEpochMilli() ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=12] = QLocalDateTimeFormat.Time <-[Call]- QLocalDateTimeFormat.parseToEpochMilli() ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     Time("HH:mm");
 
-    // CallChain[size=13] = QLocalDateTimeFormat.dtfUTC <-[Call]- QLocalDateTimeFormat.dtf() <-[Call]- Q ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=13] = QLocalDateTimeFormat.dtfUTC <-[Call]- QLocalDateTimeFormat.dtf() <-[Call]- Q ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     private val dtfUTC by lazy { DateTimeFormatter.ofPattern(format).withZone(ZoneOffset.UTC) }
-    // CallChain[size=13] = QLocalDateTimeFormat.dtfDefault <-[Call]- QLocalDateTimeFormat.dtf() <-[Call ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=13] = QLocalDateTimeFormat.dtfDefault <-[Call]- QLocalDateTimeFormat.dtf() <-[Call ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     private val dtfDefault by lazy { DateTimeFormatter.ofPattern(format).withZone(ZoneOffset.systemDefault()) }
 
-    // CallChain[size=12] = QLocalDateTimeFormat.dtf() <-[Call]- QLocalDateTimeFormat.parseToEpochMilli( ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=12] = QLocalDateTimeFormat.dtf() <-[Call]- QLocalDateTimeFormat.parseToEpochMilli( ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     private fun dtf(zone: QZone): DateTimeFormatter {
         return when (zone) {
             QZone.DEFAULT -> dtfDefault
@@ -60,12 +61,12 @@ internal enum class QLocalDateTimeFormat(val format: String) {
         }
     }
 
-    // CallChain[size=11] = QLocalDateTimeFormat.format() <-[Call]- Long.qFormatDateTime() <-[Call]- Pat ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=11] = QLocalDateTimeFormat.format() <-[Call]- Long.qFormatDateTime() <-[Call]- Pat ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     fun format(epochTimeMillis: Long, zone: QZone = QZone.DEFAULT): String {
         return dtf(zone).format(Instant.ofEpochMilli(epochTimeMillis))
     }
 
-    // CallChain[size=11] = QLocalDateTimeFormat.parseToEpochMilli() <-[Call]- _qParseDateTime() <-[Call ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=11] = QLocalDateTimeFormat.parseToEpochMilli() <-[Call]- _qParseDateTime() <-[Call ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     fun parseToEpochMilli(text: String, zone: QZone = QZone.DEFAULT): Long {
         val dtf = dtf(zone)
         return when (this) {
@@ -79,12 +80,12 @@ internal enum class QLocalDateTimeFormat(val format: String) {
     }
 }
 
-// CallChain[size=9] = String.qParseDateTime() <-[Call]- Path.qDateTime() <-[Call]- QBackupFile.back ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=9] = String.qParseDateTime() <-[Call]- Path.qDateTime() <-[Call]- QBackupFile.back ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun String.qParseDateTime(): Long {
     return _qParseDateTime(this, QZone.DEFAULT)
 }
 
-// CallChain[size=10] = _qParseDateTime() <-[Call]- String.qParseDateTime() <-[Call]- Path.qDateTime ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=10] = _qParseDateTime() <-[Call]- String.qParseDateTime() <-[Call]- Path.qDateTime ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 private fun _qParseDateTime(text: String, zone: QZone = QZone.DEFAULT): Long {
     val dateStr = if (text.length == "0000-00-00T00-00-00".length) {
         text
@@ -107,36 +108,36 @@ private fun _qParseDate(text: String, zone: QZone = QZone.DEFAULT): Long {
     return QLocalDateTimeFormat.Date.parseToEpochMilli(timeStr, zone)
 }
 
-// CallChain[size=10] = Long.qFormatDateTime() <-[Call]- Path.qWithDateTime() <-[Call]- QBackupHelpe ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=10] = Long.qFormatDateTime() <-[Call]- Path.qWithDateTime() <-[Call]- QBackupHelpe ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Long.qFormatDateTime(): String {
     return QLocalDateTimeFormat.DateTime.format(this, QZone.DEFAULT)
 }
 
-// CallChain[size=5] = QUnit <-[Ref]- Long.qFormatDuration() <-[Call]- QTimeItResult.toString() <-[Call]- qTimeIt() <-[Call]- QCompactLibAnalysis.analysisResult[Root]
+// CallChain[size=2] = QUnit <-[Ref]- QPhase.printPhaseTime()[Root]
 internal enum class QUnit {
-    // CallChain[size=5] = QUnit.Nano <-[Call]- Long.qFormatDuration() <-[Call]- QTimeItResult.toString() <-[Call]- qTimeIt() <-[Call]- QCompactLibAnalysis.analysisResult[Root]
+    // CallChain[size=3] = QUnit.Nano <-[Propag]- QUnit.Milli <-[Call]- QPhase.printPhaseTime()[Root]
     Nano,
-    // CallChain[size=5] = QUnit.Micro <-[Call]- Long.qFormatDuration() <-[Call]- QTimeItResult.toString() <-[Call]- qTimeIt() <-[Call]- QCompactLibAnalysis.analysisResult[Root]
+    // CallChain[size=3] = QUnit.Micro <-[Propag]- QUnit.Milli <-[Call]- QPhase.printPhaseTime()[Root]
     Micro,
-    // CallChain[size=5] = QUnit.Milli <-[Call]- Long.qFormatDuration() <-[Call]- QTimeItResult.toString() <-[Call]- qTimeIt() <-[Call]- QCompactLibAnalysis.analysisResult[Root]
+    // CallChain[size=2] = QUnit.Milli <-[Call]- QPhase.printPhaseTime()[Root]
     Milli,
-    // CallChain[size=5] = QUnit.Second <-[Call]- Long.qFormatDuration() <-[Call]- QTimeItResult.toString() <-[Call]- qTimeIt() <-[Call]- QCompactLibAnalysis.analysisResult[Root]
+    // CallChain[size=3] = QUnit.Second <-[Propag]- QUnit.Milli <-[Call]- QPhase.printPhaseTime()[Root]
     Second,
-    // CallChain[size=5] = QUnit.Minute <-[Call]- Long.qFormatDuration() <-[Call]- QTimeItResult.toString() <-[Call]- qTimeIt() <-[Call]- QCompactLibAnalysis.analysisResult[Root]
+    // CallChain[size=3] = QUnit.Minute <-[Propag]- QUnit.Milli <-[Call]- QPhase.printPhaseTime()[Root]
     Minute,
-    // CallChain[size=5] = QUnit.Hour <-[Call]- Long.qFormatDuration() <-[Call]- QTimeItResult.toString() <-[Call]- qTimeIt() <-[Call]- QCompactLibAnalysis.analysisResult[Root]
+    // CallChain[size=3] = QUnit.Hour <-[Propag]- QUnit.Milli <-[Call]- QPhase.printPhaseTime()[Root]
     Hour,
-    // CallChain[size=5] = QUnit.Day <-[Call]- Long.qFormatDuration() <-[Call]- QTimeItResult.toString() <-[Call]- qTimeIt() <-[Call]- QCompactLibAnalysis.analysisResult[Root]
+    // CallChain[size=3] = QUnit.Day <-[Propag]- QUnit.Milli <-[Call]- QPhase.printPhaseTime()[Root]
     Day
 }
 
-// CallChain[size=4] = Long.qFormatDuration() <-[Call]- QTimeItResult.toString() <-[Call]- qTimeIt() <-[Call]- QCompactLibAnalysis.analysisResult[Root]
+// CallChain[size=2] = Long.qFormatDuration() <-[Call]- QPhase.printPhaseTime()[Root]
 internal fun Long.qFormatDuration(unit: QUnit = QUnit.Nano): String {
     return when (unit) {
         QUnit.Milli ->
             Duration.ofMillis(this).qFormat()
         QUnit.Micro ->
-            Duration.ofNanos(this).qFormat()
+            Duration.ofNanos(this * 1000).qFormat()
         QUnit.Nano ->
             Duration.ofNanos(this).qFormat()
         QUnit.Second ->
@@ -150,18 +151,22 @@ internal fun Long.qFormatDuration(unit: QUnit = QUnit.Nano): String {
     }
 }
 
-// CallChain[size=6] = Duration.qToMicrosOnlyPart() <-[Call]- Duration.qFormat() <-[Call]- Long.qFor ... ]- QTimeItResult.toString() <-[Call]- qTimeIt() <-[Call]- QCompactLibAnalysis.analysisResult[Root]
+// CallChain[size=4] = Duration.qToMicrosOnlyPart() <-[Call]- Duration.qFormat() <-[Call]- Long.qFormatDuration() <-[Call]- QPhase.printPhaseTime()[Root]
 internal fun Duration.qToMicrosOnlyPart(): Int {
     return (toNanosPart() % 1_000_000) / 1_000
 }
 
-// CallChain[size=6] = Duration.qToNanoOnlyPart() <-[Call]- Duration.qFormat() <-[Call]- Long.qForma ... ]- QTimeItResult.toString() <-[Call]- qTimeIt() <-[Call]- QCompactLibAnalysis.analysisResult[Root]
+// CallChain[size=4] = Duration.qToNanoOnlyPart() <-[Call]- Duration.qFormat() <-[Call]- Long.qFormatDuration() <-[Call]- QPhase.printPhaseTime()[Root]
 internal fun Duration.qToNanoOnlyPart(): Int {
     return toNanosPart() % 1_000
 }
 
-// CallChain[size=5] = Duration.qFormat() <-[Call]- Long.qFormatDuration() <-[Call]- QTimeItResult.toString() <-[Call]- qTimeIt() <-[Call]- QCompactLibAnalysis.analysisResult[Root]
+// CallChain[size=3] = Duration.qFormat() <-[Call]- Long.qFormatDuration() <-[Call]- QPhase.printPhaseTime()[Root]
 internal fun Duration.qFormat(detail: Boolean = false): String {
+    if(this.isZero) {
+        return "0"
+    }
+
     val du = abs()
 
     val maxUnit: QUnit = du.let {

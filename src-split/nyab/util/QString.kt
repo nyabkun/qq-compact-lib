@@ -11,6 +11,7 @@
 package nyab.util
 
 import java.nio.charset.Charset
+import java.util.*
 import kotlin.math.min
 import kotlin.reflect.full.extensionReceiverParameter
 import kotlin.reflect.full.isSuperclassOf
@@ -19,9 +20,18 @@ import nyab.conf.QMyLog
 import nyab.conf.QMyToString
 import nyab.match.QMFunc
 import nyab.match.and
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
+
+// CallChain[size=7] = QLR <-[Ref]- String.qAlign() <-[Call]- String.qAlignRightAll() <-[Call]- Stri ... LargeFiles() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal enum class QLR {
+    // CallChain[size=7] = QLR.LEFT <-[Call]- String.qAlign() <-[Call]- String.qAlignRightAll() <-[Call] ... LargeFiles() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+    LEFT,
+    // CallChain[size=7] = QLR.RIGHT <-[Call]- String.qAlign() <-[Call]- String.qAlignRightAll() <-[Call ... LargeFiles() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+    RIGHT
+}
 
 // CallChain[size=2] = String.qWithMaxLengthMiddleDots() <-[Call]- QChainNode.chainsToString()[Root]
 internal fun String.qWithMaxLengthMiddleDots(maxLength: Int, middleDots: String = " ... "): String {
@@ -85,12 +95,12 @@ internal enum class QOnlyIfStr(val matches: (String) -> Boolean) {
     Always({ true })
 }
 
-// CallChain[size=10] = String.qWithDotPrefix() <-[Call]- Path.qWithNewExtension() <-[Call]- Path.qC ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=10] = String.qWithDotPrefix() <-[Call]- Path.qWithNewExtension() <-[Call]- Path.qC ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun String.qWithDotPrefix(): String {
     return "." + qWithoutDotPrefix()
 }
 
-// CallChain[size=11] = String.qWithoutDotPrefix() <-[Call]- String.qWithDotPrefix() <-[Call]- Path. ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=11] = String.qWithoutDotPrefix() <-[Call]- String.qWithDotPrefix() <-[Call]- Path. ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun String.qWithoutDotPrefix(): String {
     val count = takeWhile { it == '.' }.count()
 
@@ -110,7 +120,7 @@ internal fun String.qWithNewLinePrefix(
     return lineSeparator.value.repeat(numNewLine) + substring(nCount)
 }
 
-// CallChain[size=16] = String.qWithNewLineSuffix() <-[Call]- String.qWithNewLineSurround() <-[Call] ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=11] = String.qWithNewLineSuffix() <-[Call]- String.qWithNewLineSurround() <-[Call] ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal fun String.qWithNewLineSuffix(numNewLine: Int = 1, onlyIf: QOnlyIfStr = QOnlyIfStr.Multiline): String {
     if (!onlyIf.matches(this)) return this
 
@@ -119,7 +129,7 @@ internal fun String.qWithNewLineSuffix(numNewLine: Int = 1, onlyIf: QOnlyIfStr =
     return substring(0, length - nCount) + "\n".repeat(numNewLine)
 }
 
-// CallChain[size=15] = String.qWithNewLineSurround() <-[Call]- QMaskResult.toString() <-[Propag]- Q ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=10] = String.qWithNewLineSurround() <-[Call]- String.qBracketEnd() <-[Call]- qBrac ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal fun String.qWithNewLineSurround(numNewLine: Int = 1, onlyIf: QOnlyIfStr = QOnlyIfStr.Multiline): String {
     if (!onlyIf.matches(this)) return this
 
@@ -186,16 +196,23 @@ internal fun String.qLineSeparator(): QLineSeparator {
     }
 }
 
+// CallChain[size=9] = String.qSubstring() <-[Call]- String.qMoveLeft() <-[Call]- QLineMatchResult.a ... LargeFiles() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun String.qSubstring(rangeBothInclusive: IntRange): String =
+        substring(rangeBothInclusive.first, rangeBothInclusive.last + 1)
+
 // CallChain[size=8] = String.qCountLeftSpace() <-[Call]- QFetchRule.SMART_FETCH <-[Call]- qLogStack ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal fun String.qCountLeftSpace(): Int = takeWhile { it == ' ' }.count()
 
-// CallChain[size=4] = qMASK_LENGTH_LIMIT <-[Call]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=9] = String.qCountRightSpace() <-[Call]- String.qMoveCenter() <-[Call]- QLineMatch ... LargeFiles() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun String.qCountRightSpace(): Int = takeLastWhile { it == ' ' }.count()
+
+// CallChain[size=4] = qMASK_LENGTH_LIMIT <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal const val qMASK_LENGTH_LIMIT: Int = 100_000
 
-// CallChain[size=6] = QToString <-[Ref]- qToStringRegistry <-[Call]- Any?.qToString() <-[Call]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=6] = QToString <-[Ref]- qToStringRegistry <-[Call]- Any.qToString() <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal class QToString(val okToApply: (Any) -> Boolean, val toString: (Any) -> String)
 
-// CallChain[size=5] = qToStringRegistry <-[Call]- Any?.qToString() <-[Call]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=5] = qToStringRegistry <-[Call]- Any.qToString() <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 private val qToStringRegistry: MutableList<QToString> by lazy {
     val toStrings =
             QMyToString::class.qFunctions(
@@ -218,7 +235,7 @@ private val qToStringRegistry: MutableList<QToString> by lazy {
     }.toMutableList()
 }
 
-// CallChain[size=4] = Any?.qToString() <-[Call]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=4] = Any.qToString() <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal fun Any?.qToString(): String {
     if (this == null)
         return "null".light_gray
@@ -232,7 +249,7 @@ internal fun Any?.qToString(): String {
     return toString()
 }
 
-// CallChain[size=3] = Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=3] = Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal fun Any?.qToLogString(maxLineLength: Int = 80): String {
     if (QMyLog.no_format) {
         return this.toString()
@@ -275,12 +292,12 @@ internal fun Any?.qToLogString(maxLineLength: Int = 80): String {
     }.qClarifyEmptyOrBlank()
 }
 
-// CallChain[size=4] = String.qClarifyEmptyOrBlank() <-[Call]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=4] = String.qClarifyEmptyOrBlank() <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal fun String.qClarifyEmptyOrBlank(): String {
     return if (this.isEmpty()) {
-        "(EMPTY STRING)".qColor(QShColor.LIGHT_GRAY)
+        "(EMPTY STRING)".qColor(QShColor.LightGray)
     } else if (this.isBlank()) {
-        "$this(BLANK STRING)".qColor(QShColor.LIGHT_GRAY)
+        "$this(BLANK STRING)".qColor(QShColor.LightGray)
     } else {
         this
     }
@@ -299,15 +316,29 @@ internal fun StringBuilder.qRemoveLastNonLinebreakWhitespaces() {
     this.setLength(this.length - lastWhiteSpaces.length)
 }
 
-// CallChain[size=3] = String.qNiceIndent() <-[Call]- QMyCompactLibGradle.build_gradle_kts <-[Ref]- QBuildGradleKtsScope.default()[Root]
-internal fun String.qNiceIndent(n4Spaces: Int): String {
-    return this.replaceIndent(" ".repeat(n4Spaces * 4)).trimStart()
+// CallChain[size=2] = String.qNiceIndent() <-[Call]- QCompactLibStat.toString()[Root]
+internal fun String.qNiceIndent(n4Spaces: Int, trimStart: Boolean = true): String {
+    val txt = this.replaceIndent(" ".repeat(n4Spaces * 4))
+
+    return if( trimStart ) {
+        txt.trimStart()
+    } else {
+        txt
+    }
 }
 
 // CallChain[size=2] = String.qCamelCaseToKebabCase() <-[Call]- QCompactLibScope.mavenArtifactId[Root]
 // https://stackoverflow.com/a/17820138
 internal fun String.qCamelCaseToKebabCase(): String {
     return this.replace(Regex("([a-z])([A-Z]+)"), "$1-$2")
-            .replace(Regex("([A-Z]+)([A-Z][a-z])"), "$1-$2")
-            .toLowerCase()
+        .replace(Regex("([A-Z]+)([A-Z][a-z])"), "$1-$2")
+        .lowercase(Locale.ENGLISH)
+}
+
+// CallChain[size=2] = String.qCamelCaseToSpaceSeparated() <-[Call]- QTopLevelType.readableName()[Root]
+internal fun String.qCamelCaseToSpaceSeparated(toLowerCase: Boolean = false): String {
+    return this.replace(Regex("([a-z])([A-Z]+)"), "$1 $2")
+        .replace(Regex("([A-Z]+)([A-Z][a-z])"), "$1 $2").applyIf(toLowerCase) {
+            lowercase(Locale.ENGLISH)
+        }
 }

@@ -71,10 +71,10 @@ class QDep(
     
 }
 
-// CallChain[size=6] = QDepLevel <-[Ref]- QDep.QDep() <-[Call]- QMyDepI.UNKNOWN_LICENSE_LIBS <-[Propag]- QMyDepI <-[Ref]- QMyDep <-[Ref]- QCompactLib[Root]
+// CallChain[size=4] = QDepLevel <-[Ref]- QMyDep.xmlParserAPIs <-[Propag]- QMyDep <-[Ref]- QCompactLib[Root]
 enum class QDepLevel {
-    // CallChain[size=7] = QDepLevel.TOP_LEVEL <-[Propag]- QDepLevel <-[Ref]- QDep.QDep() <-[Call]- QMyDepI.UNKNOWN_LICENSE_LIBS <-[Propag]- QMyDepI <-[Ref]- QMyDep <-[Ref]- QCompactLib[Root]
+    // CallChain[size=5] = QDepLevel.TOP_LEVEL <-[Propag]- QDepLevel.TRANSITIVE <-[Call]- QMyDep.xmlParserAPIs <-[Propag]- QMyDep <-[Ref]- QCompactLib[Root]
     TOP_LEVEL,
-    // CallChain[size=7] = QDepLevel.TRANSITIVE <-[Propag]- QDepLevel <-[Ref]- QDep.QDep() <-[Call]- QMyDepI.UNKNOWN_LICENSE_LIBS <-[Propag]- QMyDepI <-[Ref]- QMyDep <-[Ref]- QCompactLib[Root]
+    // CallChain[size=4] = QDepLevel.TRANSITIVE <-[Call]- QMyDep.xmlParserAPIs <-[Propag]- QMyDep <-[Ref]- QCompactLib[Root]
     TRANSITIVE
 }

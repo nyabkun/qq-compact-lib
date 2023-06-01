@@ -15,6 +15,7 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.OutputStream
 import java.io.OutputStreamWriter
+import java.lang.reflect.Method
 import java.nio.charset.Charset
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -29,28 +30,29 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import nyab.conf.QE
+import nyab.ex.util.qSubProcessMainClassFqName
 
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
-// CallChain[size=9] = QRunResultType <-[Ref]- QRunResult.type <-[Propag]- QRunResult.QRunResult() < ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=6] = QRunResultType <-[Ref]- QRunResult.type <-[Propag]- QRunResult <-[Ref]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal enum class QRunResultType {
-    // CallChain[size=9] = QRunResultType.Success <-[Call]- QRunResult.type <-[Propag]- QRunResult.QRunR ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=6] = QRunResultType.Success <-[Call]- QRunResult.type <-[Propag]- QRunResult <-[Re ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     Success,
-    // CallChain[size=9] = QRunResultType.Error <-[Call]- QRunResult.type <-[Propag]- QRunResult.QRunRes ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=6] = QRunResultType.Error <-[Call]- QRunResult.type <-[Propag]- QRunResult <-[Ref] ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     Error,
-    // CallChain[size=9] = QRunResultType.CannotExecute <-[Call]- QRunResult.type <-[Propag]- QRunResult ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=6] = QRunResultType.CannotExecute <-[Call]- QRunResult.type <-[Propag]- QRunResult ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     CannotExecute
 }
 
-// CallChain[size=5] = QRunResult <-[Ref]- QGit.String.runCmd() <-[Call]- QGit.config_get_remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=4] = QRunResult <-[Ref]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal open class QRunResult(private val procResult: QProcResult, val exitCode: Int, val cmds: List<String>) :
     QProcResultI by procResult {
-    // CallChain[size=2] = QRunResult.success <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=5] = QRunResult.success <-[Propag]- QRunResult <-[Ref]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     val success: Boolean
         get() = exitCode == 0
 
-    // CallChain[size=8] = QRunResult.type <-[Propag]- QRunResult.QRunResult() <-[Call]- List<String>.qE ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=5] = QRunResult.type <-[Propag]- QRunResult <-[Ref]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     val type: QRunResultType = when (exitCode) {
         0 -> {
             QRunResultType.Success
@@ -65,37 +67,37 @@ internal open class QRunResult(private val procResult: QProcResult, val exitCode
         }
     }
 
-    // CallChain[size=8] = QRunResult.isExecuted() <-[Propag]- QRunResult.QRunResult() <-[Call]- List<St ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=5] = QRunResult.isExecuted() <-[Propag]- QRunResult <-[Ref]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     fun isExecuted() = this !== NotExecuted
 
     companion object {
-        // CallChain[size=8] = QRunResult.NotExecuted <-[Propag]- QRunResult.QRunResult() <-[Call]- List<Str ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+        // CallChain[size=5] = QRunResult.NotExecuted <-[Propag]- QRunResult <-[Ref]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
         val NotExecuted: QRunResult = QRunResultNotExecuted()
     }
 }
 
-// CallChain[size=9] = QRunResultNotExecuted <-[Call]- QRunResult.NotExecuted <-[Propag]- QRunResult ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=6] = QRunResultNotExecuted <-[Call]- QRunResult.NotExecuted <-[Propag]- QRunResult ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 private class QRunResultNotExecuted(exitCode: Int = -1, cmds: List<String> = emptyList()) :
     QRunResult(procResult = QProcResult("", "", null), exitCode, cmds)
 
-// CallChain[size=9] = QProcResultI <-[Ref]- QProcResult <-[Ref]- QProcStreamHandlerI.handleStream() ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=8] = QProcResultI <-[Ref]- QProcResult <-[Ref]- QProcStreamHandlerI.handleStream() ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal interface QProcResultI {
-    // CallChain[size=10] = QProcResultI.output <-[Propag]- QProcResultI <-[Ref]- QProcResult <-[Ref]- Q ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=9] = QProcResultI.output <-[Propag]- QProcResultI <-[Ref]- QProcResult <-[Ref]- QP ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     val output: String
-    // CallChain[size=10] = QProcResultI.error <-[Propag]- QProcResultI <-[Ref]- QProcResult <-[Ref]- QP ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=9] = QProcResultI.error <-[Propag]- QProcResultI <-[Ref]- QProcResult <-[Ref]- QPr ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     val error: String
-    // CallChain[size=10] = QProcResultI.anything <-[Propag]- QProcResultI <-[Ref]- QProcResult <-[Ref]- ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=9] = QProcResultI.anything <-[Propag]- QProcResultI <-[Ref]- QProcResult <-[Ref]-  ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     val anything: Any?
 }
 
-// CallChain[size=8] = QProcResult <-[Ref]- QProcStreamHandlerI.handleStream() <-[Propag]- QProcStre ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=7] = QProcResult <-[Ref]- QProcStreamHandlerI.handleStream() <-[Propag]- QProcStre ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal data class QProcResult(
     override val output: String,
     override val error: String,
     override val anything: Any? = null,
 ) : QProcResultI
 
-// CallChain[size=7] = QProcStreamHandler <-[Call]- QProcStreamHandlerI.CONSOLE <-[Call]- String.qRu ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=5] = QProcStreamHandler <-[Call]- QProcStreamHandlerI.CONSOLE <-[Call]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal open class QProcStreamHandler(
     override val redirectErrorOutStream: Boolean = false,
     val procInCharset: Charset = Charsets.UTF_8,
@@ -104,7 +106,7 @@ internal open class QProcStreamHandler(
     val consoleOutErr: OutputStream = System.err,
     val consoleCharset: Charset = Charset.forName(System.getProperty("file.encoding")),
 ) : QProcStreamHandlerI {
-    // CallChain[size=8] = QProcStreamHandler.handleStream() <-[Propag]- QProcStreamHandler <-[Call]- QP ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=6] = QProcStreamHandler.handleStream() <-[Propag]- QProcStreamHandler <-[Call]- QP ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     @Suppress("UNUSED_PARAMETER")
     private suspend fun handleStream(
         procOut: InputStreamReader,
@@ -133,7 +135,7 @@ internal open class QProcStreamHandler(
         QProcResult(out, err)
     }
 
-    // CallChain[size=8] = QProcStreamHandler.handleStream() <-[Propag]- QProcStreamHandler <-[Call]- QP ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=6] = QProcStreamHandler.handleStream() <-[Propag]- QProcStreamHandler <-[Call]- QP ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     override suspend fun handleStream(procOut: InputStream, procErr: InputStream, procIn: OutputStream): QProcResult =
         handleStream(
             InputStreamReader(procOut, procOutCharset),
@@ -142,14 +144,14 @@ internal open class QProcStreamHandler(
         )
 }
 
-// CallChain[size=7] = QProcStreamHandlerSilent <-[Call]- QProcStreamHandlerI.SILENT <-[Call]- Strin ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=6] = QProcStreamHandlerSilent <-[Call]- QProcStreamHandlerI.SILENT <-[Call]- Strin ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal open class QProcStreamHandlerSilent(
     override val redirectErrorOutStream: Boolean = false,
     val procInCharset: Charset = Charsets.UTF_8,
     val procOutCharset: Charset = procInCharset,
 ) : QProcStreamHandlerI {
 
-    // CallChain[size=8] = QProcStreamHandlerSilent.handleStream() <-[Propag]- QProcStreamHandlerSilent. ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=7] = QProcStreamHandlerSilent.handleStream() <-[Propag]- QProcStreamHandlerSilent. ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     @Suppress("UNUSED_PARAMETER")
     private suspend fun handleStream(
         procOut: InputStreamReader,
@@ -174,7 +176,7 @@ internal open class QProcStreamHandlerSilent(
         QProcResult(out, err)
     }
 
-    // CallChain[size=8] = QProcStreamHandlerSilent.handleStream() <-[Propag]- QProcStreamHandlerSilent. ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=7] = QProcStreamHandlerSilent.handleStream() <-[Propag]- QProcStreamHandlerSilent. ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     override suspend fun handleStream(procOut: InputStream, procErr: InputStream, procIn: OutputStream): QProcResult =
         handleStream(
             InputStreamReader(procOut, procOutCharset),
@@ -183,24 +185,156 @@ internal open class QProcStreamHandlerSilent(
         )
 }
 
-// CallChain[size=6] = QProcStreamHandlerI <-[Ref]- String.qRunInShell() <-[Call]- QGit.String.runCm ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=4] = QProcStreamHandlerI <-[Ref]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal interface QProcStreamHandlerI {
-    // CallChain[size=7] = QProcStreamHandlerI.redirectErrorOutStream <-[Propag]- QProcStreamHandlerI.SI ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=6] = QProcStreamHandlerI.redirectErrorOutStream <-[Propag]- QProcStreamHandlerI.SI ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     val redirectErrorOutStream: Boolean
 
-    // CallChain[size=7] = QProcStreamHandlerI.handleStream() <-[Propag]- QProcStreamHandlerI.SILENT <-[ ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=6] = QProcStreamHandlerI.handleStream() <-[Propag]- QProcStreamHandlerI.SILENT <-[ ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     suspend fun handleStream(procOut: InputStream, procErr: InputStream, procIn: OutputStream): QProcResult
 
     companion object {
-        // CallChain[size=6] = QProcStreamHandlerI.SILENT <-[Call]- String.qRunInShell() <-[Call]- QGit.Stri ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+        // CallChain[size=5] = QProcStreamHandlerI.SILENT <-[Call]- String.qRunInShell() <-[Call]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
         val SILENT = QProcStreamHandlerSilent(redirectErrorOutStream = true)
-        // CallChain[size=6] = QProcStreamHandlerI.CONSOLE <-[Call]- String.qRunInShell() <-[Call]- QGit.Str ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+        // CallChain[size=4] = QProcStreamHandlerI.CONSOLE <-[Call]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
         val CONSOLE = QProcStreamHandler()
         
     }
 }
 
-// CallChain[size=6] = List<String>.qExec() <-[Call]- String.qRunInShell() <-[Call]- QGit.String.run ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=5] = String.qRunShellScript() <-[Call]- qRunMethodInNewJVMProcess() <-[Call]- QGit.renameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal suspend fun String.qRunShellScript(
+    scriptPath: Path = qCallerSrcLineSignature().qEscapeFileName().pathTmp,
+    shell: QShell = QShell.DEFAULT,
+    pwd: Path = Paths.get("."),
+    environments: Map<String, String>? = null,
+    streamHandler: QProcStreamHandlerI = QProcStreamHandlerI.CONSOLE,
+): QRunResult {
+    return when (shell) {
+        QShell.CMD -> qRunBatScript(
+            scriptPath,
+            pwd,
+            environments,
+            streamHandler
+        )
+
+        QShell.PWSH -> qExecPowershellScript(
+            scriptPath,
+            pwd,
+            environments,
+            streamHandler
+        )
+
+        QShell.BASH -> qExecBashScript(
+            scriptPath,
+            pwd,
+            environments,
+            streamHandler
+        )
+
+        QShell.WIN_BASH -> qExecBashScript(
+            scriptPath,
+            pwd,
+            environments,
+            streamHandler
+        )
+    }
+}
+
+// CallChain[size=7] = Path.qRunBatScript() <-[Call]- String.qRunBatScript() <-[Call]- String.qRunSh ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+private suspend fun Path.qRunBatScript(
+    pwd: Path = Paths.get("."),
+    environments: Map<String, String>? = null,
+    streamHandler: QProcStreamHandlerI = QProcStreamHandlerI.CONSOLE,
+): QRunResult {
+    // https://stackoverflow.com/a/19100338/5570400
+    return listOf(*QShell.CMD.cmd, this.absolutePathString()).qExec(
+        pwd = pwd,
+        environments = environments,
+        streamHandler = streamHandler
+    )
+}
+
+// CallChain[size=6] = String.qRunBatScript() <-[Call]- String.qRunShellScript() <-[Call]- qRunMetho ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+private suspend fun String.qRunBatScript(
+    scriptPath: Path = (qCallerSrcLineSignature() + ".bat").qEscapeFileName().pathTmp,
+    pwd: Path = Paths.get("."),
+    environments: Map<String, String>? = null,
+    streamHandler: QProcStreamHandlerI = QProcStreamHandlerI.CONSOLE,
+): QRunResult {
+    val scriptPathEx = scriptPath.qWithNewExtension("bat")
+
+    scriptPathEx.qWrite(
+        "@echo off\n$this",
+        ifExists = QIfExistsWrite.OverwriteDirect
+    )
+
+    return scriptPathEx.qRunBatScript(pwd, environments, streamHandler)
+}
+
+// CallChain[size=7] = Path.qExecPowershellScript() <-[Call]- String.qExecPowershellScript() <-[Call ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+private suspend fun Path.qExecPowershellScript(
+    pwd: Path = Paths.get("."),
+    environments: Map<String, String>? = null,
+    streamHandler: QProcStreamHandlerI = QProcStreamHandlerI.CONSOLE,
+): QRunResult {
+    // https://stackoverflow.com/a/19100338/5570400
+    return listOf("powershell", "-File", this.absolutePathString()).qExec(
+        pwd = pwd,
+        environments = environments,
+        streamHandler = streamHandler
+    )
+}
+
+// CallChain[size=6] = String.qExecPowershellScript() <-[Call]- String.qRunShellScript() <-[Call]- q ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+private suspend fun String.qExecPowershellScript(
+    scriptPath: Path = (qCallerSrcLineSignature() + ".ps1").qEscapeFileName().pathTmp,
+    pwd: Path = Paths.get("."),
+    environments: Map<String, String>? = null,
+    streamHandler: QProcStreamHandlerI = QProcStreamHandlerI.CONSOLE,
+): QRunResult {
+    val scriptPathEx = scriptPath.qWithNewExtension("ps1")
+
+    scriptPathEx.qWrite(
+        this,
+        ifExists = QIfExistsWrite.OverwriteDirect
+    )
+
+    return scriptPathEx.qExecPowershellScript(pwd, environments, streamHandler)
+}
+
+// CallChain[size=7] = Path.qExecBashScript() <-[Call]- String.qExecBashScript() <-[Call]- String.qR ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+private suspend fun Path.qExecBashScript(
+    pwd: Path = Paths.get("."),
+    environments: Map<String, String>? = null,
+    streamHandler: QProcStreamHandlerI = QProcStreamHandlerI.CONSOLE,
+): QRunResult {
+    // https://stackoverflow.com/a/19100338/5570400
+    return listOf(this.absolutePathString()).qExec(
+        pwd = pwd,
+        environments = environments,
+        streamHandler = streamHandler
+    )
+}
+
+// CallChain[size=6] = String.qExecBashScript() <-[Call]- String.qRunShellScript() <-[Call]- qRunMet ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+private suspend fun String.qExecBashScript(
+    scriptPath: Path = (qCallerSrcLineSignature() + ".sh").qEscapeFileName().pathTmp,
+    pwd: Path = Paths.get("."),
+    environments: Map<String, String>? = null,
+    streamHandler: QProcStreamHandlerI = QProcStreamHandlerI.CONSOLE,
+): QRunResult {
+    val scriptPathEx = scriptPath.qWithNewExtension("sh")
+
+    scriptPathEx.qWrite(
+        this,
+        ifExists = QIfExistsWrite.OverwriteDirect
+    )
+
+    return scriptPathEx.qExecBashScript(pwd, environments, streamHandler)
+}
+
+// CallChain[size=3] = List<String>.qExec() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal suspend fun List<String>.qExec(
     pwd: Path = Paths.get("."),
     environments: Map<String, String>? = null,
@@ -265,15 +399,15 @@ internal suspend fun List<String>.qExec(
     result
 }
 
-// CallChain[size=6] = String.qMakeShellCmd() <-[Call]- String.qRunInShell() <-[Call]- QGit.String.r ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=5] = String.qMakeShellCmd() <-[Call]- String.qRunInShell() <-[Call]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal fun String.qMakeShellCmd(shell: QShell = QShell.DEFAULT): List<String> {
     return listOf(*shell.cmd, this)
 }
 
-// CallChain[size=5] = qNO_QUOTE_ARGS <-[Call]- List<String>.qRunInShell() <-[Call]- QGit.List<String>.runCmd() <-[Call]- QGit.gh_release_create() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=4] = qNO_QUOTE_ARGS <-[Call]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 private val qNO_QUOTE_ARGS = listOf("<", "|", "&", "&&", "||")
 
-// CallChain[size=4] = List<String>.qRunInShell() <-[Call]- QGit.List<String>.runCmd() <-[Call]- QGit.gh_release_create() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=3] = List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal suspend fun List<String>.qRunInShell(
     pwd: Path = Paths.get("."),
     shell: QShell = QShell.DEFAULT,
@@ -295,7 +429,7 @@ internal suspend fun List<String>.qRunInShell(
     )
 }
 
-// CallChain[size=5] = String.qRunInShell() <-[Call]- QGit.String.runCmd() <-[Call]- QGit.config_get_remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=4] = String.qRunInShell() <-[Call]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal suspend fun String.qRunInShell(
     pwd: Path = Paths.get("."),
     shell: QShell = QShell.DEFAULT,
@@ -319,7 +453,7 @@ internal suspend fun String.qRunInShell(
     )
 }
 
-// CallChain[size=9] = InputStreamReader.qGet() <-[Call]- QProcStreamHandlerSilent.handleStream() <- ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=8] = InputStreamReader.qGet() <-[Call]- QProcStreamHandlerSilent.handleStream() <- ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal suspend fun InputStreamReader.qGet(
     buffSize: Int = qBUFFER_SIZE,
 ): String =
@@ -338,7 +472,7 @@ internal suspend fun InputStreamReader.qGet(
         sb.toString()
     }
 
-// CallChain[size=9] = InputStreamReader.qRedirectAndGet() <-[Call]- QProcStreamHandler.handleStream ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=7] = InputStreamReader.qRedirectAndGet() <-[Call]- QProcStreamHandler.handleStream ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal suspend fun InputStreamReader.qRedirectAndGet(
     out: OutputStreamWriter,
     buffSize: Int = qBUFFER_SIZE,
@@ -364,7 +498,7 @@ internal suspend fun InputStreamReader.qRedirectAndGet(
         sb.toString()
     }
 
-// CallChain[size=5] = List<String>.qJoinAndQuoteShellArgs() <-[Call]- List<String>.qRunInShell() <- ... <String>.runCmd() <-[Call]- QGit.gh_release_create() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=4] = List<String>.qJoinAndQuoteShellArgs() <-[Call]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal fun List<String>.qJoinAndQuoteShellArgs(
     shell: QShell = QShell.DEFAULT,
     noQuoteArgs: List<String> = listOf("<", "|", "&", "&&", "||")
@@ -378,7 +512,7 @@ internal fun List<String>.qJoinAndQuoteShellArgs(
     }
 }
 
-// CallChain[size=7] = QShell <-[Ref]- QShell.DEFAULT_PWSH <-[Call]- QGit.shell <-[Call]- QGit.Strin ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=3] = QShell <-[Ref]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 @Suppress("SpellCheckingInspection")
 internal enum class QShell(
     val charsToBeQuoted: CharArray,
@@ -387,7 +521,7 @@ internal enum class QShell(
     val cmd: Array<String>,
     val withEscapeToWithoutEscapeInQuotedString: Array<Pair<String, String>>,
 ) {
-    // CallChain[size=7] = QShell.CMD <-[Propag]- QShell.DEFAULT_PWSH <-[Call]- QGit.shell <-[Call]- QGi ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=3] = QShell.CMD <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     // TODO Check
     CMD(
         cmd = arrayOf("cmd", "/c"),
@@ -405,7 +539,7 @@ internal enum class QShell(
             "\\\"" to "\"",
         ),
     ),
-    // CallChain[size=7] = QShell.PWSH <-[Call]- QShell.DEFAULT_PWSH <-[Call]- QGit.shell <-[Call]- QGit ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=4] = QShell.PWSH <-[Propag]- QShell.CMD <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     PWSH(
         cmd = arrayOf("powershell", "-NoP", "-c"),
         charsToBeQuoted = charArrayOf(' ', '\t', '\"', '<', '>', '&', '|', '^'),
@@ -421,7 +555,7 @@ internal enum class QShell(
             "`\"" to "\"",
         ),
     ),
-    // CallChain[size=7] = QShell.BASH <-[Call]- QShell.DEFAULT_PWSH <-[Call]- QGit.shell <-[Call]- QGit ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=4] = QShell.BASH <-[Propag]- QShell.CMD <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     BASH(
         cmd = arrayOf("/bin/sh", "-c"),
         charsToBeQuoted = charArrayOf(' ', '\t', '\"', '<', '>', '&', '|', '^'),
@@ -438,7 +572,7 @@ internal enum class QShell(
             "\\\"" to "\"",
         ),
     ),
-    // CallChain[size=7] = QShell.WIN_BASH <-[Propag]- QShell.DEFAULT_PWSH <-[Call]- QGit.shell <-[Call] ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=4] = QShell.WIN_BASH <-[Propag]- QShell.CMD <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     WIN_BASH(
         cmd = arrayOf("bash", "-c"),
         charsToBeQuoted = charArrayOf(' ', '\t', '\"', '<', '>', '&', '|', '^'),
@@ -457,14 +591,14 @@ internal enum class QShell(
     );
 
     companion object {
-        // CallChain[size=6] = QShell.DEFAULT <-[Call]- String.qRunInShell() <-[Call]- QGit.String.runCmd()  ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+        // CallChain[size=4] = QShell.DEFAULT <-[Call]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
         val DEFAULT: QShell = if (qIsWindows()) CMD else BASH
-        // CallChain[size=6] = QShell.DEFAULT_PWSH <-[Call]- QGit.shell <-[Call]- QGit.String.runCmd() <-[Ca ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+        // CallChain[size=4] = QShell.DEFAULT_PWSH <-[Call]- QGit.restore_staged() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
         val DEFAULT_PWSH: QShell = if (qIsWindows()) PWSH else BASH
     }
 }
 
-// CallChain[size=6] = String.qIsShellArgNeedsQuote() <-[Call]- List<String>.qJoinAndQuoteShellArgs( ... <String>.runCmd() <-[Call]- QGit.gh_release_create() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=5] = String.qIsShellArgNeedsQuote() <-[Call]- List<String>.qJoinAndQuoteShellArgs( ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 private fun String.qIsShellArgNeedsQuote(shell: QShell = QShell.DEFAULT): Boolean {
     if (isEmpty()) return false
 
@@ -476,7 +610,7 @@ private fun String.qIsShellArgNeedsQuote(shell: QShell = QShell.DEFAULT): Boolea
     return shell.charsToBeQuoted.any { this.contains(it) }
 }
 
-// CallChain[size=7] = String.qUnquoteArg() <-[Call]- String.qIsShellArgNeedsQuote() <-[Call]- List< ... <String>.runCmd() <-[Call]- QGit.gh_release_create() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=6] = String.qUnquoteArg() <-[Call]- String.qIsShellArgNeedsQuote() <-[Call]- List< ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal fun String.qUnquoteArg(shell: QShell = QShell.DEFAULT): String {
     if (!startsWith(shell.quote) || !endsWith(shell.quote) || length < 2) return this
 
@@ -488,8 +622,32 @@ internal fun String.qUnquoteArg(shell: QShell = QShell.DEFAULT): String {
     )
 }
 
-// CallChain[size=6] = String.qQuoteArg() <-[Call]- List<String>.qJoinAndQuoteShellArgs() <-[Call]-  ... <String>.runCmd() <-[Call]- QGit.gh_release_create() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=5] = String.qQuoteArg() <-[Call]- List<String>.qJoinAndQuoteShellArgs() <-[Call]-  ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal fun String.qQuoteArg(shell: QShell = QShell.DEFAULT): String {
     shell.charsToBeQuoted
     return shell.quote + this.qEscapeString(*shell.withEscapeToWithoutEscapeInQuotedString) + shell.quote
+}
+
+// CallChain[size=4] = qRunMethodInNewJVMProcess() <-[Call]- QGit.renameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal suspend fun qRunMethodInNewJVMProcess(method: Method, shell: QShell = QShell.DEFAULT): QRunResult {
+    val cmd = qCreateJavaCmd(qSubProcessMainClassFqName, method.qFqName()).qJoinAndQuoteShellArgs(shell = shell)
+
+    return cmd.qRunShellScript( // to avoid "The command line is too long." error
+        streamHandler = QProcStreamHandlerI.SILENT,
+        shell = shell
+    )
+}
+
+// CallChain[size=5] = qCreateJavaCmd() <-[Call]- qRunMethodInNewJVMProcess() <-[Call]- QGit.renameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun qCreateJavaCmd(mainClass: String, vararg args: String): List<String> {
+    val cmds = mutableListOf<String>()
+    cmds += "java"
+    cmds += "-cp"
+
+    val cp = System.getProperty("java.class.path")
+    cmds += cp
+    cmds += mainClass
+    cmds += args
+
+    return cmds
 }

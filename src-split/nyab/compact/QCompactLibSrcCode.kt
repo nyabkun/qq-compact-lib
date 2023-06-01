@@ -50,10 +50,10 @@ class QCompactLibSrcCodeScope() {
     // << Root of the CallChain >>
     private fun build(): QCompactLibSrcCode {
         return QCompactLibSrcCode(
-                visibilityChange = visibilityChange,
-                nonTopLevelSrc = nonTopLevelSrc,
-                topLevelSrc = topLevelSrc,
-                finalSrc = finalSrc
+            visibilityChange = visibilityChange,
+            nonTopLevelSrc = nonTopLevelSrc,
+            topLevelSrc = topLevelSrc,
+            finalSrc = finalSrc
         )
     }
 
@@ -81,11 +81,11 @@ class QCompactLibSrcCodeScope() {
 // << Root of the CallChain >>
 @QCompactLibDsl
 class QTopLevelSrcCodeScope(
-        val compactSrc: String,
-        val element: KtElement,
-        val visibilityChange: QKtVisibilityChange,
-        val analysisCtx: QAnalysisContext,
-        val srcSetType: QSrcSetType,
+    val compactSrc: String,
+    val element: KtElement,
+    val visibilityChange: QKtVisibilityChange,
+    val analysisCtx: QAnalysisContext,
+    val srcSetType: QSrcSetType,
 ) {
     // << Root of the CallChain >>
     fun default(): String {
@@ -94,15 +94,15 @@ class QTopLevelSrcCodeScope(
         return comment + when (visibilityChange) {
             QKtVisibilityChange.NoChange -> compactSrc
             QKtVisibilityChange.ToPrivate -> QSrcCreationUtils.srcCodeWithPrivateModifier(
-                    element,
-                    element.qVisibility(),
-                    compactSrc
+                element,
+                element.qVisibility(),
+                compactSrc
             )
 
             QKtVisibilityChange.ToInternal -> QSrcCreationUtils.srcCodeWithInternalModifier(
-                    element,
-                    element.qVisibility(),
-                    compactSrc
+                element,
+                element.qVisibility(),
+                compactSrc
             )
         }
     }
@@ -111,12 +111,17 @@ class QTopLevelSrcCodeScope(
 // << Root of the CallChain >>
 @QCompactLibDsl
 class QVisibilityChangeScope internal constructor(
-        val compactEle: QTopLevelCompactElement,
-        val analysisCtx: QAnalysisContext,
-        val srcSetType: QSrcSetType,
+    val lib: QCompactLib,
+    val compactEle: QTopLevelCompactElement,
+    val analysisCtx: QAnalysisContext,
+    val srcSetType: QSrcSetType,
 ) {
     // << Root of the CallChain >>
     fun default(): QKtVisibilityChange {
+        if (lib.visibilityUnchangedClasses.any { it.qualifiedName == compactEle.fqName }) {
+            return QKtVisibilityChange.NoChange
+        }
+
         return if (compactEle.isChainRoot()) {
             QKtVisibilityChange.NoChange
         } else if (!srcSetType.isSingleFileSelfContained) {
@@ -130,7 +135,8 @@ class QVisibilityChangeScope internal constructor(
 // << Root of the CallChain >>
 @QCompactLibDsl
 class QSingleFileAnnotationCreationScope internal constructor(
-        val analysisCtx: QAnalysisContext,
+    val analysisCtx: QAnalysisContext,
+    val isTest: Boolean
 ) {
     // << Root of the CallChain >>
     fun default(): String {
@@ -144,9 +150,10 @@ class QSingleFileAnnotationCreationScope internal constructor(
 
 // << Root of the CallChain >>
 @QCompactLibDsl
-class QSplitFileAnnotationCreationContext internal constructor(
-        val analysisCtx: QAnalysisContext,
-        val ktFile: KtFile,
+class QSplitFileAnnotationCreationScope internal constructor(
+    val analysisCtx: QAnalysisContext,
+    val isTest: Boolean,
+    val ktFile: KtFile,
 ) {
     // << Root of the CallChain >>
     fun default(): String {

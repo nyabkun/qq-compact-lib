@@ -13,9 +13,9 @@ package nyab.conf
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
-// CallChain[size=4] = QMyTest <-[Ref]- qOkToTest() <-[Call]- Any?.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
+// CallChain[size=4] = QMyTest <-[Ref]- qOkToTest() <-[Call]- Any.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
 internal object QMyTest {
-    // CallChain[size=4] = QMyTest.forceTestMode <-[Call]- qOkToTest() <-[Call]- Any?.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
+    // CallChain[size=4] = QMyTest.forceTestMode <-[Call]- qOkToTest() <-[Call]- Any.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
     const val forceTestMode = true
     
 }

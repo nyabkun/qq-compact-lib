@@ -15,27 +15,27 @@ import java.util.*
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
-// CallChain[size=8] = QOSType <-[Ref]- qIsWindows() <-[Call]- QShell.DEFAULT_PWSH <-[Call]- QGit.sh ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=4] = QOSType <-[Ref]- qIsWindows() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal enum class QOSType {
-    // CallChain[size=8] = QOSType.WINDOWS <-[Call]- qIsWindows() <-[Call]- QShell.DEFAULT_PWSH <-[Call] ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=4] = QOSType.WINDOWS <-[Call]- qIsWindows() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     WINDOWS,
-    // CallChain[size=9] = QOSType.LINUX <-[Propag]- QOSType.WINDOWS <-[Call]- qIsWindows() <-[Call]- QS ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=5] = QOSType.LINUX <-[Propag]- QOSType.WINDOWS <-[Call]- qIsWindows() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     LINUX,
-    // CallChain[size=9] = QOSType.MAC <-[Propag]- QOSType.WINDOWS <-[Call]- qIsWindows() <-[Call]- QShe ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=5] = QOSType.MAC <-[Propag]- QOSType.WINDOWS <-[Call]- qIsWindows() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     MAC,
-    // CallChain[size=9] = QOSType.SOLARIS <-[Propag]- QOSType.WINDOWS <-[Call]- qIsWindows() <-[Call]-  ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=5] = QOSType.SOLARIS <-[Propag]- QOSType.WINDOWS <-[Call]- qIsWindows() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     SOLARIS,
-    // CallChain[size=9] = QOSType.OTHER <-[Propag]- QOSType.WINDOWS <-[Call]- qIsWindows() <-[Call]- QS ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=5] = QOSType.OTHER <-[Propag]- QOSType.WINDOWS <-[Call]- qIsWindows() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     OTHER
 }
 
-// CallChain[size=8] = os <-[Call]- qIsWindows() <-[Call]- QShell.DEFAULT_PWSH <-[Call]- QGit.shell  ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=4] = os <-[Call]- qIsWindows() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal val os: QOSType by lazy { os() }
 
-// CallChain[size=10] = osName <-[Call]- os() <-[Call]- os <-[Call]- qIsWindows() <-[Call]- QShell.D ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=6] = osName <-[Call]- os() <-[Call]- os <-[Call]- qIsWindows() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal val osName: String by lazy { System.getProperty("os.name") }
 
-// CallChain[size=9] = os() <-[Call]- os <-[Call]- qIsWindows() <-[Call]- QShell.DEFAULT_PWSH <-[Cal ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=5] = os() <-[Call]- os <-[Call]- qIsWindows() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 private fun os(): QOSType {
     val osName = osName.lowercase(Locale.getDefault())
     if (osName.contains("win")) {
@@ -53,5 +53,5 @@ private fun os(): QOSType {
     return QOSType.OTHER
 }
 
-// CallChain[size=7] = qIsWindows() <-[Call]- QShell.DEFAULT_PWSH <-[Call]- QGit.shell <-[Call]- QGi ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=3] = qIsWindows() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal fun qIsWindows() = os == QOSType.WINDOWS

@@ -15,12 +15,12 @@ package nyab.util
 import java.io.File
 import java.io.PrintStream
 import java.nio.file.Path
-import java.util.*
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile
 import nyab.conf.QE
 import nyab.conf.QMyMark
+import nyab.conf.qSTACK_FRAME_FILTER
 import nyab.match.QM
 
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
@@ -44,7 +44,7 @@ internal fun QE.throwItFile(path: Path, e: Throwable? = null, stackDepth: Int = 
     throw QException(this, qBrackets("File", path.absolutePathString()), e, stackDepth = stackDepth + 1)
 }
 
-// CallChain[size=5] = QE.throwItDir() <-[Call]- Path.qMoveFileTo() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=5] = QE.throwItDir() <-[Call]- Path.qMoveFileTo() <-[Call]- Path.qWrite() <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun QE.throwItDir(path: Path, e: Throwable? = null, stackDepth: Int = 0): Nothing {
     throw QException(this, qBrackets("Dir", path.absolutePathString()), e, stackDepth = stackDepth + 1)
 }
@@ -62,11 +62,11 @@ internal fun qUnreachable(msg: Any? = ""): Nothing {
 // CallChain[size=3] = QException <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal class QException(
     val type: QE = QE.Other,
-    msg: String = QMyMark.WARN,
+    msg: String = QMyMark.warn,
     e: Throwable? = null,
     val stackDepth: Int = 0,
     stackSize: Int = 20,
-    stackFilter: (StackWalker.StackFrame) -> Boolean = QE.STACK_FRAME_FILTER,
+    stackFilter: (StackWalker.StackFrame) -> Boolean = qSTACK_FRAME_FILTER,
     private val srcCut: QSrcCut = QSrcCut.MULTILINE_NOCUT,
 ) : RuntimeException(msg, e) {
 
@@ -81,7 +81,7 @@ internal class QException(
     // CallChain[size=5] = QException.mySrcAndStack <-[Call]- QException.printStackTrace() <-[Propag]- QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     val mySrcAndStack: String by lazy {
         qLogStackFrames(frames = stackFrames, style = QLogStyle.SRC_AND_STACK, srcCut = srcCut, quiet = true)
-            .qColorTarget(qRe("""\sshould[a-zA-Z]+"""), QShColor.LIGHT_YELLOW)
+            .qColorTarget(qRe("""\sshould[a-zA-Z]+"""), QShColor.LightYellow)
     }
 
     // CallChain[size=4] = QException.getStackTrace() <-[Propag]- QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
@@ -112,14 +112,21 @@ internal class QException(
     }
 }
 
-// CallChain[size=7] = Boolean.qaFalse() <-[Call]- Path.qToRelativePath() <-[Call]- Path.qWithBaseDi ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=4] = Path.qaFile() <-[Call]- QGit.gitHubDownloadAndUpdateMyself() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun Path.qaFile(exceptionType: QE = QE.ShouldBeRegularFile, msg: Any? = "") {
+    if (!this.isRegularFile()) {
+        exceptionType.throwIt(stackDepth = 1, msg = msg)
+    }
+}
+
+// CallChain[size=7] = Boolean.qaFalse() <-[Call]- Path.qToRelativePath() <-[Call]- Path.qWithBaseDi ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Boolean.qaFalse(exceptionType: QE = QE.ShouldBeFalse, msg: Any? = "") {
     if (this) {
         exceptionType.throwIt(stackDepth = 1, msg = msg)
     }
 }
 
-// CallChain[size=10] = T?.qaNotNull() <-[Call]- qSrcFileAtFrame() <-[Call]- qSrcFileLinesAtFrame()  ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=10] = T.qaNotNull() <-[Call]- qSrcFileAtFrame() <-[Call]- qSrcFileLinesAtFrame() < ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal fun <T : Any> T?.qaNotNull(exceptionType: QE = QE.ShouldNotBeNull, msg: Any? = ""): T {
     if (this != null) {
         return this
@@ -128,7 +135,7 @@ internal fun <T : Any> T?.qaNotNull(exceptionType: QE = QE.ShouldNotBeNull, msg:
     }
 }
 
-// CallChain[size=5] = Int?.qaNotZero() <-[Call]- CharSequence.qMask() <-[Call]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=5] = Int.qaNotZero() <-[Call]- CharSequence.qMask() <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal fun Int?.qaNotZero(exceptionType: QE = QE.ShouldNotBeZero, msg: Any? = ""): Int {
     if (this == null) {
         QE.ShouldNotBeNull.throwIt(stackDepth = 1, msg = msg)

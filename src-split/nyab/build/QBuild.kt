@@ -25,13 +25,12 @@ import nyab.conf.QE
 import nyab.conf.QMyEditor
 import nyab.conf.QMyPath
 import nyab.match.QM
-import nyab.util.QIfExistsCopy
+import nyab.util.QIfExistsCopyFile
 import nyab.util.QShell
-import nyab.util.qExec
+import nyab.util.norm
 import nyab.util.qIsWindows
 import nyab.util.qRunInShell
 import nyab.util.throwIt
-import nyab.util.throwItFile
 
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
@@ -49,7 +48,7 @@ internal fun qClassPaths(): List<Path> {
     return cps.map { Paths.get(it) }.toList()
 }
 
-// CallChain[size=3] = qOpenBrowser() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=3] = qOpenBrowser() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
 internal fun qOpenBrowser(uri: String) {
     try {
         Desktop.getDesktop().browse(URI(uri))
@@ -58,25 +57,19 @@ internal fun qOpenBrowser(uri: String) {
     }
 }
 
-// CallChain[size=2] = Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
-internal suspend fun Path.qOpenEditor(editor: QMyEditor = QMyEditor.Idea, vararg options: String) =
-    withContext(Dispatchers.IO) {
-        try {
-            if (editor == QMyEditor.PlatformDefault) {
-                try {
-                    // https://stackoverflow.com/questions/6273221/open-a-text-file-in-the-default-text-editor-via-java
-                    Desktop.getDesktop().edit(this@qOpenEditor.toFile())
-                } catch (e: Exception) {
-                    val cmd = if (qIsWindows()) "notepad.exe" else "vi"
-
-                    (listOf(cmd) + options + pathString).qExec()
-                }
-            } else {
-                (listOf(editor.cmd) + options + pathString).qRunInShell(
-                    shell = QShell.CMD
-                )
-            }
-        } catch (e: Exception) {
-            QE.FileOpenFail.throwItFile(this@qOpenEditor, e = e)
-        }
+// CallChain[size=4] = Path.qOpenExplorer() <-[Call]- QGit.gitHubDownloadSingleDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal suspend fun Path.qOpenExplorer() = withContext(Dispatchers.IO) {
+    val isDir = this@qOpenExplorer.isDirectory()
+    val dir = if (isDir) {
+        this@qOpenExplorer.norm
+    } else {
+        this@qOpenExplorer.parent.norm
     }
+
+    // https://stackoverflow.com/questions/15875295/open-a-folder-in-explorer-using-java
+    if (qIsWindows()) {
+        listOf("start", dir.pathString).qRunInShell(shell = QShell.CMD)
+    } else {
+        Desktop.getDesktop().open(dir.toFile())
+    }
+}

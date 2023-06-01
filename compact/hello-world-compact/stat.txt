@@ -1,0 +1,29 @@
+Version: v2023-05-26-alpha
+
+# Public API [main]
+CompactHelloWorld - Class
+
+# single src file number of lines [main]
+48
+# split src file number of files [main]
+3
+# number of marked nodes [main]
+5
+# number of all nodes [main]
+9
+# number of root of chain nodes [main]
+2
+# single src file number of lines [test]
+20
+# split src file number of files [test]
+0
+# number of marked nodes [test]
+0
+# number of all nodes [test]
+0
+# number of root of chain nodes [test]
+0
+
+# chain node hit count [main]
+CompactHelloWorld.hello() [KtNamedFunction] <Second Level> : 3
+ ChaoticClass.sayHello() [KtNamedFunction] <Second Level> : 1

@@ -29,7 +29,7 @@ plugins {
 
 group = "com.github.nyabkun"
 
-version = "v2023-05-27-alpha"
+version = "v2023-06-01-alpha"
 
 repositories {
     mavenCentral()
@@ -57,26 +57,27 @@ sourceSets.test {
 }
 
 sourceSets.register("example") {
-                    java.srcDirs(
-    "src-split",
-    "src-example"
-)
-                
-                    resources.srcDirs("rsc")
-                }
-                
-                tasks.getByName("compileExampleKotlin").dependsOn("jar")
+    java.srcDirs(
+        "src-split",
+        "src-example"
+    )
 
-                val exampleImplementation: Configuration by configurations.getting {
-                    extendsFrom(configurations.implementation.get())
-                }
+    resources.srcDirs("rsc")
+}
 
-                val exampleRuntimeOnly: Configuration by configurations.getting {
-                    extendsFrom(configurations.runtimeOnly.get())
-                }
+tasks.getByName("compileExampleKotlin").dependsOn("jar")
+
+val exampleImplementation: Configuration by configurations.getting {
+    extendsFrom(configurations.implementation.get())
+}
+
+val exampleRuntimeOnly: Configuration by configurations.getting {
+    extendsFrom(configurations.runtimeOnly.get())
+}
 
 
 dependencies {
+    implementation("org.apache.httpcomponents:httpclient:4.5.14")
     implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.8.20")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.20")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.20")

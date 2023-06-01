@@ -10,11 +10,16 @@
 
 package nyab.compact
 
+import java.nio.file.Path
 import nyab.util.qCacheIt
+import nyab.util.qCamelCaseToSpaceSeparated
 import nyab.util.qLineNumberAt
 import nyab.util.qLineSeparator
+import nyab.util.qReadFile
+import nyab.util.slash
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassBody
+import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtDeclarationContainer
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtFile
@@ -23,6 +28,9 @@ import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtTypeAlias
 import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
+import org.jetbrains.kotlin.psi.psiUtil.isAbstract
+import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
+import org.jetbrains.kotlin.psi.psiUtil.isObjectLiteral
 import org.jetbrains.kotlin.psi.psiUtil.isTopLevelKtOrJavaMember
 
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
@@ -61,6 +69,44 @@ class QTopLevelCompactElement(
     }
 
     // << Root of the CallChain >>
+    val type: QTopLevelType
+        get() {
+            return if (topLevelElement is KtNamedFunction) {
+                if( topLevelElement.isExtensionDeclaration() ) {
+                    QTopLevelType.ExtensionFunction
+                } else {
+                    QTopLevelType.Function
+                }
+            } else if (topLevelElement is KtProperty) {
+                if( topLevelElement.isExtensionDeclaration() ) {
+                    QTopLevelType.ExtensionProperty
+                } else {
+                    QTopLevelType.Property
+                }
+            } else if (topLevelElement is KtClass) {
+                if (topLevelElement.isEnum()) {
+                    QTopLevelType.EnumClass
+                } else if (topLevelElement.isAnnotation()) {
+                    QTopLevelType.AnnotationClass
+                } else if (topLevelElement.isData()) {
+                    QTopLevelType.DataClass
+                } else if (topLevelElement.isInterface()) {
+                    QTopLevelType.Interface
+                } else if (topLevelElement.isAbstract()) {
+                    QTopLevelType.AbstractClass
+                } else if (topLevelElement.isValue()) {
+                    QTopLevelType.ValueClass
+                } else {
+                    QTopLevelType.Class
+                }
+            } else if (topLevelElement is KtClassOrObject && topLevelElement.isObjectLiteral()) {
+                QTopLevelType.ObjectLiteral
+            } else {
+                QTopLevelType.Other
+            }
+        }
+
+    // << Root of the CallChain >>
     val ktFile: KtFile = topLevelElement.containingKtFile
 
     // << Root of the CallChain >>
@@ -82,22 +128,41 @@ class QTopLevelCompactElement(
     // << Root of the CallChain >>
     val nodesChainedFrom: List<QChainNode> = chainNodes.mapNotNull { it.nodeChainFrom() }.toList()
 
-//    fun imports(): List<String> =
-// //        ktElementsInMarkedNodes()
-//        topLevelElement.qElementsAll.mapNotNull {
-//            it.qResolveCall(analysisCtx, onlyUserCodeBase = false)
-//        }.flatMap {
-//            it.importDirectiveCandidates
-//        }.mapNotNull {
-//            this.containingImportPath(it)
-//        }.distinct().toList()
+    // << Root of the CallChain >>
+    fun markDownSrcCodeLink(): String = qCacheIt("#mk_link${topLevelElement.qElementKey}") {
+        val path = destSplitSrcFileRelativePath().slash
+        val lineRange = destSplitSrcFileLineNum().toMarkdownLineRange()
 
-//    val importPathsUsedInMarkedNodes: List<ImportPath> =
-//        ktElementsInMarkedNodes().mapNotNull {
-//            it.getResolvedCall(analysisCtx.analysis.bindingContext)?.candidateDescriptor
-//        }.mapNotNull {
-//            it.getTopLevelContainingClassifier()?.fqNameSafe?.let { fqName -> ImportPath(fqName, false, null) }
-//        }.distinct().toList()
+        "(${path}${lineRange})"
+    }
+
+    // << Root of the CallChain >>
+    private fun IntRange.toMarkdownLineRange(): String {
+        return if( this.first == this.last ) {
+            "#L$start"
+        } else {
+            "#L$start-L$last"
+        }
+    }
+
+    // << Root of the CallChain >>
+    fun destSplitSrcFileRelativePath(): Path {
+        val dest = analysisCtx.splitFiles[ktFile.virtualFilePath]!!.destPath
+        return analysisCtx.lib.destProjDir.relativize(dest)
+    }
+
+    // << Root of the CallChain >>
+    fun destSplitSrcFileAbsolutePath(): Path {
+        return analysisCtx.splitFiles[ktFile.virtualFilePath]!!.destPath
+    }
+
+    // << Root of the CallChain >>
+    fun destSplitSrcFileLineNum(): IntRange {
+        val srcCode = toSrcCode(if (analysisCtx.isTest) QSrcSetType.TestSplit else QSrcSetType.MainSplit)
+        val content = destSplitSrcFileAbsolutePath().qReadFile(analysisCtx.lib.srcCharset)
+        val idx = content.indexOf(srcCode)
+        return IntRange(content.qLineNumberAt(idx), content.qLineNumberAt(idx + srcCode.length))
+    }
 
     // << Root of the CallChain >>
     fun ktElementsInMarkedNodes(): List<KtElement> {
@@ -123,17 +188,10 @@ class QTopLevelCompactElement(
     val originalVisibility: QKtVisibility = topLevelElement.qVisibility()
 
     // << Root of the CallChain >>
-    fun visibilityChange(srcSetType: QSrcSetType): QKtVisibilityChange = qCacheIt("vc#" + topLevelElement.qElementKey.value + ":" + srcSetType.name) {
-        lib.srcCode.visibilityChange(QVisibilityChangeScope(this, analysisCtx, srcSetType))
-    }
-
-//    val finalVisibility: QKtVisibility by lazy {
-//        when (visibilityChange) {
-//            QKtVisibilityChange.NoChange -> originalVisibility
-//            QKtVisibilityChange.ToPrivate -> QKtVisibility.Private
-//            QKtVisibilityChange.ToInternal -> QKtVisibility.Internal
-//        }
-//    }
+    fun visibilityChange(srcSetType: QSrcSetType): QKtVisibilityChange =
+        qCacheIt("vc#" + topLevelElement.qElementKey.value + ":" + srcSetType.name) {
+            lib.srcCode.visibilityChange(QVisibilityChangeScope(lib, this, analysisCtx, srcSetType))
+        }
 
     // << Root of the CallChain >>
     val isTopLevelOnly: Boolean = chainNodes.size == 1 && chainNodes[0].targetElement.isTopLevelKtOrJavaMember()
@@ -195,8 +253,8 @@ class QTopLevelCompactElement(
     // << Root of the CallChain >>
     override fun toString(): String {
         return topLevelElement.qSimpleName() +
-            "\nchainNodes.size = " + chainNodes.size + "\n" +
-            chainNodes.joinToString("  ") { it.toString() }
+                "\nchainNodes.size = " + chainNodes.size + "\n" +
+                chainNodes.joinToString("  ") { it.toString() }
     }
 
     // << Root of the CallChain >>
@@ -215,5 +273,58 @@ class QTopLevelCompactElement(
         return importFqNames?.find {
             it.endsWith(".$name")
         }
+    }
+
+    // << Root of the CallChain >>
+    fun finalVisibility(mainOrTest: QSrcSetType): QKtVisibility {
+        return when (
+            lib.srcCode.visibilityChange(
+                QVisibilityChangeScope(lib, this, analysisCtx, mainOrTest)
+            )
+        ) {
+            QKtVisibilityChange.ToPrivate ->
+                QKtVisibility.Private
+
+            QKtVisibilityChange.ToInternal ->
+                QKtVisibility.Internal
+
+            QKtVisibilityChange.NoChange ->
+                originalVisibility
+        }
+    }
+}
+
+// << Root of the CallChain >>
+enum class QTopLevelType {
+    // << Root of the CallChain >>
+    Function,
+    // << Root of the CallChain >>
+    ExtensionFunction,
+    // << Root of the CallChain >>
+    Property,
+    // << Root of the CallChain >>
+    ExtensionProperty,
+    // << Root of the CallChain >>
+    ObjectLiteral,
+    // << Root of the CallChain >>
+    Class,
+    // << Root of the CallChain >>
+    Interface,
+    // << Root of the CallChain >>
+    AbstractClass,
+    // << Root of the CallChain >>
+    EnumClass,
+    // << Root of the CallChain >>
+    DataClass,
+    // << Root of the CallChain >>
+    AnnotationClass,
+    // << Root of the CallChain >>
+    ValueClass,
+    // << Root of the CallChain >>
+    Other;
+
+    // << Root of the CallChain >>
+    fun readableName(): String {
+        return name.qCamelCaseToSpaceSeparated(toLowerCase = true)
     }
 }

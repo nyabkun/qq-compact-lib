@@ -46,6 +46,6 @@ internal class QMapCount<K>(private val map: MutableMap<K, Int> = mutableMapOf()
 
         return this.map.entries.sortedBy { -it.value }.take(limit).joinToString("\n") {
             String.format("$keyFormat : $valueFormat", keyToString(it.key).blue, it.value)
-        }
+        }.trimIndent()
     }
 }

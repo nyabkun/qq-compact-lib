@@ -34,6 +34,7 @@ import org.jetbrains.kotlin.com.intellij.psi.PsiFile
 import org.jetbrains.kotlin.com.intellij.psi.PsiWhiteSpace
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtCallableDeclaration
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassBody
 import org.jetbrains.kotlin.psi.KtDeclaration
@@ -242,12 +243,15 @@ fun KtElement.qHasChildCallChainNode(srcLevel: QSrcLevel): Boolean {
             QDeclarationType.CompanionObject,
             QDeclarationType.ObjectLiteral,
             -> true
+
             else -> false
         }
+
         QSrcLevel.Second -> when (type) {
             QDeclarationType.CompanionObject -> true
             else -> false
         }
+
         else -> false
     }
 }
@@ -265,9 +269,11 @@ fun KtElement.qDeclarationType(): QDeclarationType = when (this) {
             QDeclarationType.Class
         }
     }
+
     is KtInitializerList -> {
         QDeclarationType.ClassInitializer
     }
+
     is KtObjectDeclaration -> {
         if (this.isCompanion()) {
             QDeclarationType.CompanionObject
@@ -275,9 +281,11 @@ fun KtElement.qDeclarationType(): QDeclarationType = when (this) {
             QDeclarationType.ObjectLiteral
         }
     }
+
     is KtObjectLiteralExpression -> {
         QDeclarationType.ObjectLiteral
     }
+
     is KtProperty -> QDeclarationType.Property
     is KtNamedFunction -> QDeclarationType.Function
     is KtTypeAlias -> QDeclarationType.TypeAlias
@@ -434,14 +442,14 @@ fun KtElement.qOuterSrcLevelTarget(allowReturnMySelf: Boolean): KtElement? {
     while (true) {
         val parent = outer!!.parent ?: return null
 
-        if( parent !is KtElement ) {
+        if (parent !is KtElement) {
             return null
 //            outer = parent
 //            continue
         }
 
         outer = parent
-        
+
         val outerKt = parent as KtElement
 
         return if (outerKt is KtFile) {
@@ -510,26 +518,25 @@ fun KtElement.qDetail(): String = "${this.qPath}:${this.qSrcLineNum()}\n${this.q
 fun KtElement.qSimpleName(parenthesesIfFunction: Boolean = true): String {
     val n = name ?: this.text.qFirstLine().trim()
 
-    return if (this is KtFunction) {
-        if (this.isExtensionDeclaration()) {
-            val type = this.receiverTypeReference
-            if (type != null) {
-                val extensionFuncName = type.qSimpleName() + ".$n"
-                return if (parenthesesIfFunction) {
-                    "$extensionFuncName()"
-                } else {
-                    extensionFuncName
-                }
-            }
-        }
-
-        if (parenthesesIfFunction) {
-            "$n()"
+    val name = if (this.isExtensionDeclaration() && this is KtCallableDeclaration) {
+        val typeName = this.receiverTypeReference?.qSimpleName()?.removeSuffix("?")
+        if (typeName != null) {
+            "$typeName.$n"
         } else {
             n
         }
     } else {
         n
+    }
+
+    return if (this is KtFunction) {
+        if (parenthesesIfFunction) {
+            "$name()"
+        } else {
+            name
+        }
+    } else {
+        name
     }
 }
 

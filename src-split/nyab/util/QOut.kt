@@ -17,7 +17,7 @@ import java.nio.file.Path
 // This is a split-file version of the library, this file is not self-contained.
 
 // CallChain[size=8] = QOut <-[Ref]- QLogStyle <-[Ref]- QLogStyle.SRC_AND_STACK <-[Call]- QException ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
-internal interface QOut {
+interface QOut {
     // CallChain[size=10] = QOut.isAcceptColoredText <-[Propag]- QOut.CONSOLE <-[Call]- QMyLog.out <-[Ca ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     val isAcceptColoredText: Boolean
 
@@ -31,7 +31,7 @@ internal interface QOut {
     fun close()
 
     companion object {
-        // CallChain[size=6] = QOut.NONE <-[Call]- String.qRunInShell() <-[Call]- QGit.String.runCmd() <-[Ca ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+        // CallChain[size=4] = QOut.NONE <-[Call]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
         val NONE: QOut = QOutIgnore
 
         // CallChain[size=9] = QOut.CONSOLE <-[Call]- QMyLog.out <-[Call]- QLogStyle <-[Ref]- QLogStyle.SRC_ ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
@@ -48,7 +48,7 @@ private class QConsole(override val isAcceptColoredText: Boolean) : QOut {
         if (isAcceptColoredText) {
             kotlin.io.print(msg.toString())
         } else {
-            kotlin.io.print(msg.toString().noColor)
+            kotlin.io.print(msg.toString().noStyle)
         }
     }
 
@@ -63,20 +63,20 @@ private class QConsole(override val isAcceptColoredText: Boolean) : QOut {
     }
 }
 
-// CallChain[size=7] = QOutIgnore <-[Call]- QOut.NONE <-[Call]- String.qRunInShell() <-[Call]- QGit. ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=5] = QOutIgnore <-[Call]- QOut.NONE <-[Call]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 private object QOutIgnore : QOut {
-    // CallChain[size=8] = QOutIgnore.isAcceptColoredText <-[Propag]- QOutIgnore <-[Call]- QOut.NONE <-[ ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=6] = QOutIgnore.isAcceptColoredText <-[Propag]- QOutIgnore <-[Call]- QOut.NONE <-[ ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     override val isAcceptColoredText: Boolean = true
 
-    // CallChain[size=8] = QOutIgnore.print() <-[Propag]- QOutIgnore <-[Call]- QOut.NONE <-[Call]- Strin ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=6] = QOutIgnore.print() <-[Propag]- QOutIgnore <-[Call]- QOut.NONE <-[Call]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     override fun print(msg: Any?) {
     }
 
-    // CallChain[size=8] = QOutIgnore.println() <-[Propag]- QOutIgnore <-[Call]- QOut.NONE <-[Call]- Str ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=6] = QOutIgnore.println() <-[Propag]- QOutIgnore <-[Call]- QOut.NONE <-[Call]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     override fun println(msg: Any?) {
     }
 
-    // CallChain[size=8] = QOutIgnore.close() <-[Propag]- QOutIgnore <-[Call]- QOut.NONE <-[Call]- Strin ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=6] = QOutIgnore.close() <-[Propag]- QOutIgnore <-[Call]- QOut.NONE <-[Call]- List<String>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     override fun close() {
         // Do nothing
     }

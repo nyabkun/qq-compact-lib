@@ -149,11 +149,11 @@ private fun QResolvedCall.qToChain(fromNode: QChainNode, analysisCtx: QAnalysisC
 
 //    val fromNode = this.from.qContainingCallChainNode(analysisCtx, true)
 
-    if (visitor.isMustDiscard(targetNode)) {
+    if (visitor.isMustDiscard(QIsMustDiscardScope(targetNode.analysisCtx.lib, targetNode, fromNode, false))) {
         return null
     }
 
-    if (visitor.isMustMark(targetNode)) {
+    if (visitor.isMustMark(QIsMustMarkScope(targetNode.analysisCtx.lib, targetNode, fromNode, false))) {
         return QChain(
             targetNode, fromNode,
             if (this.type == QResolvedType.ByTypeReference) {
@@ -166,7 +166,7 @@ private fun QResolvedCall.qToChain(fromNode: QChainNode, analysisCtx: QAnalysisC
         )
     }
 
-    val result = visitor.resolved(QNodeResolvedScope(targetNode, fromNode, this.type))
+    val result = visitor.resolved(QNodeResolvedScope(analysisCtx.lib, targetNode, fromNode, this.type))
 
     return if (result == QNodeVisited.MarkThisNodeAndContinueChain) {
         QChain(

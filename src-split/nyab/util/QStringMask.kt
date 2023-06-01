@@ -28,13 +28,13 @@ internal fun String.qCountOccurrence(word: String): Int {
     }.sum()
 }
 
-// CallChain[size=12] = QMask <-[Ref]- QMaskBetween <-[Call]- qMASK_COLORED <-[Call]- String.qApplyC ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=7] = QMask <-[Ref]- QMaskBetween <-[Call]- QMask.DOUBLE_QUOTE <-[Call]- QMask.KOTL ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal interface QMask {
-    // CallChain[size=13] = QMask.apply() <-[Propag]- QMask <-[Ref]- QMaskBetween <-[Call]- qMASK_COLORE ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=5] = QMask.apply() <-[Propag]- QMask.KOTLIN_STRING <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     fun apply(text: String): QMaskResult
 
     companion object {
-        // CallChain[size=5] = QMask.THREE_DOUBLE_QUOTES <-[Call]- QMask.KOTLIN_STRING <-[Call]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+        // CallChain[size=5] = QMask.THREE_DOUBLE_QUOTES <-[Call]- QMask.KOTLIN_STRING <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
         val THREE_DOUBLE_QUOTES by lazy {
             QMaskBetween(
                 "\"\"\"", "\"\"\"",
@@ -43,7 +43,7 @@ internal interface QMask {
                 maskIncludeStartAndEndSequence = false,
             )
         }
-        // CallChain[size=5] = QMask.DOUBLE_QUOTE <-[Call]- QMask.KOTLIN_STRING <-[Call]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+        // CallChain[size=5] = QMask.DOUBLE_QUOTE <-[Call]- QMask.KOTLIN_STRING <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
         val DOUBLE_QUOTE by lazy {
             QMaskBetween(
                 "\"", "\"",
@@ -52,21 +52,21 @@ internal interface QMask {
                 maskIncludeStartAndEndSequence = false,
             )
         }
-        // CallChain[size=4] = QMask.KOTLIN_STRING <-[Call]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+        // CallChain[size=4] = QMask.KOTLIN_STRING <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
         val KOTLIN_STRING by lazy {
             QMultiMask(
                 THREE_DOUBLE_QUOTES,
                 DOUBLE_QUOTE
             )
         }
-        // CallChain[size=4] = QMask.PARENS <-[Call]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+        // CallChain[size=4] = QMask.PARENS <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
         val PARENS by lazy {
             QMaskBetween(
                 "(", ")",
                 nestStartSequence = "(", escapeChar = '\\'
             )
         }
-        // CallChain[size=4] = QMask.INNER_BRACKETS <-[Call]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+        // CallChain[size=4] = QMask.INNER_BRACKETS <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
         val INNER_BRACKETS by lazy {
             QMaskBetween(
                 "[", "]",
@@ -76,7 +76,7 @@ internal interface QMask {
             )
         }
 
-        // CallChain[size=3] = QMask.PARAMS_AND_CONTENT_OF_FUNC <-[Call]- String.qGetTopLevelFunctionsQuickAndDirty() <-[Call]- Path?.qReadCodeExamples()[Root]
+        // CallChain[size=3] = QMask.PARAMS_AND_CONTENT_OF_FUNC <-[Call]- String.qGetTopLevelFunctionsQuickAndDirty() <-[Call]- Path.qReadCodeExamples()[Root]
         // fun myFunc(a: Int, b: () -> String = { "default" }): String {
         //    println("Hello")
         // }
@@ -107,17 +107,17 @@ internal interface QMask {
     }
 }
 
-// CallChain[size=5] = QMultiMask <-[Call]- QMask.KOTLIN_STRING <-[Call]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=5] = QMultiMask <-[Call]- QMask.KOTLIN_STRING <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal class QMultiMask(vararg mask: QMaskBetween) : QMask {
-    // CallChain[size=7] = QMultiMask.masks <-[Call]- QMultiMask.apply() <-[Propag]- QMultiMask <-[Call] ... l]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=7] = QMultiMask.masks <-[Call]- QMultiMask.apply() <-[Propag]- QMultiMask <-[Call] ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     val masks: Array<QMaskBetween>
 
-    // CallChain[size=6] = QMultiMask.init { <-[Propag]- QMultiMask <-[Call]- QMask.KOTLIN_STRING <-[Call]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=6] = QMultiMask.init { <-[Propag]- QMultiMask <-[Call]- QMask.KOTLIN_STRING <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     init {
         masks = arrayOf(*mask)
     }
 
-    // CallChain[size=6] = QMultiMask.apply() <-[Propag]- QMultiMask <-[Call]- QMask.KOTLIN_STRING <-[Call]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=6] = QMultiMask.apply() <-[Propag]- QMultiMask <-[Call]- QMask.KOTLIN_STRING <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     override fun apply(text: String): QMaskResult {
         var result: QMaskResult? = null
         for (mask in masks) {
@@ -128,7 +128,7 @@ internal class QMultiMask(vararg mask: QMaskBetween) : QMask {
     }
 }
 
-// CallChain[size=11] = QMaskBetween <-[Call]- qMASK_COLORED <-[Call]- String.qApplyColorNestable()  ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=6] = QMaskBetween <-[Call]- QMask.DOUBLE_QUOTE <-[Call]- QMask.KOTLIN_STRING <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal class QMaskBetween(
     val startSequence: String,
     val endSequence: String,
@@ -147,12 +147,12 @@ internal class QMaskBetween(
     val maskChar: Char = '\uee31',
 ) : QMask {
 
-    // CallChain[size=12] = QMaskBetween.apply() <-[Propag]- QMaskBetween.QMaskBetween() <-[Ref]- qMASK_ ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=7] = QMaskBetween.apply() <-[Propag]- QMaskBetween.QMaskBetween() <-[Ref]- QMask.D ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     override fun apply(text: String): QMaskResult {
         return applyMore(text, null)
     }
 
-    // CallChain[size=13] = QMaskBetween.applyMore() <-[Call]- QMaskBetween.apply() <-[Propag]- QMaskBet ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=8] = QMaskBetween.applyMore() <-[Call]- QMaskBetween.apply() <-[Propag]- QMaskBetw ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     fun applyMore(text: String, orgText: String? = null): QMaskResult {
         val regions = text.qFindBetween(
             startSequence,
@@ -205,9 +205,9 @@ internal class QMaskBetween(
     }
 }
 
-// CallChain[size=16] = QMutRegion <-[Ref]- QRegion.toMutRegion() <-[Propag]- QRegion.contains() <-[ ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=11] = QMutRegion <-[Ref]- QRegion.toMutRegion() <-[Propag]- QRegion.contains() <-[ ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal open class QMutRegion(override var start: Int, override var end: Int) : QRegion(start, end) {
-    // CallChain[size=17] = QMutRegion.intersectMut() <-[Propag]- QMutRegion <-[Ref]- QRegion.toMutRegio ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=12] = QMutRegion.intersectMut() <-[Propag]- QMutRegion <-[Ref]- QRegion.toMutRegio ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     fun intersectMut(region: QRegion) {
         val start = max(this.start, region.start)
         val end = min(this.end, region.end)
@@ -218,39 +218,39 @@ internal open class QMutRegion(override var start: Int, override var end: Int) :
         }
     }
 
-    // CallChain[size=17] = QMutRegion.addOffset() <-[Propag]- QMutRegion <-[Ref]- QRegion.toMutRegion() ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=12] = QMutRegion.addOffset() <-[Propag]- QMutRegion <-[Ref]- QRegion.toMutRegion() ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     fun addOffset(offset: Int) {
         start += offset
         end += offset
     }
 
-    // CallChain[size=17] = QMutRegion.shift() <-[Propag]- QMutRegion <-[Ref]- QRegion.toMutRegion() <-[ ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=12] = QMutRegion.shift() <-[Propag]- QMutRegion <-[Ref]- QRegion.toMutRegion() <-[ ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     fun shift(length: Int) {
         this.start += length
         this.end += length
     }
 }
 
-// CallChain[size=16] = QRegion <-[Ref]- QRegion.intersect() <-[Propag]- QRegion.contains() <-[Call] ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=11] = QRegion <-[Ref]- QRegion.intersect() <-[Propag]- QRegion.contains() <-[Call] ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 /**
  * [start] inclusive, [end] exclusive
  */
 internal open class QRegion(open val start: Int, open val end: Int) {
-    // CallChain[size=15] = QRegion.toMutRegion() <-[Propag]- QRegion.contains() <-[Call]- QMaskBetween. ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=10] = QRegion.toMutRegion() <-[Propag]- QRegion.contains() <-[Call]- QMaskBetween. ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     fun toMutRegion(): QMutRegion {
         return QMutRegion(start, end)
     }
 
-    // CallChain[size=15] = QRegion.toRange() <-[Propag]- QRegion.contains() <-[Call]- QMaskBetween.appl ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=10] = QRegion.toRange() <-[Propag]- QRegion.contains() <-[Call]- QMaskBetween.appl ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     fun toRange(): IntRange {
         return IntRange(start, end + 1)
     }
 
-    // CallChain[size=15] = QRegion.length <-[Propag]- QRegion.contains() <-[Call]- QMaskBetween.applyMo ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=10] = QRegion.length <-[Propag]- QRegion.contains() <-[Call]- QMaskBetween.applyMo ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     val length: Int
         get() = end - start
 
-    // CallChain[size=15] = QRegion.intersect() <-[Propag]- QRegion.contains() <-[Call]- QMaskBetween.ap ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=10] = QRegion.intersect() <-[Propag]- QRegion.contains() <-[Call]- QMaskBetween.ap ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     fun intersect(region: QRegion): QRegion? {
         val start = max(this.start, region.start)
         val end = min(this.end, region.end)
@@ -262,38 +262,38 @@ internal open class QRegion(open val start: Int, open val end: Int) {
         }
     }
 
-    // CallChain[size=14] = QRegion.contains() <-[Call]- QMaskBetween.applyMore() <-[Call]- QMaskBetween ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=9] = QRegion.contains() <-[Call]- QMaskBetween.applyMore() <-[Call]- QMaskBetween. ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     fun contains(idx: Int): Boolean {
         return idx in start until end
     }
 
-    // CallChain[size=15] = QRegion.cut() <-[Propag]- QRegion.contains() <-[Call]- QMaskBetween.applyMor ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=10] = QRegion.cut() <-[Propag]- QRegion.contains() <-[Call]- QMaskBetween.applyMor ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     fun cut(text: String): String {
         return text.substring(start, end)
     }
 
-    // CallChain[size=15] = QRegion.remove() <-[Propag]- QRegion.contains() <-[Call]- QMaskBetween.apply ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=10] = QRegion.remove() <-[Propag]- QRegion.contains() <-[Call]- QMaskBetween.apply ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     fun remove(text: String): String {
         return text.removeRange(start, end)
     }
 
-    // CallChain[size=15] = QRegion.replace() <-[Propag]- QRegion.contains() <-[Call]- QMaskBetween.appl ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=10] = QRegion.replace() <-[Propag]- QRegion.contains() <-[Call]- QMaskBetween.appl ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     fun replace(text: String, replacement: String): String {
         return text.replaceRange(start, end, replacement)
     }
 
-    // CallChain[size=15] = QRegion.mask() <-[Propag]- QRegion.contains() <-[Call]- QMaskBetween.applyMo ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=10] = QRegion.mask() <-[Propag]- QRegion.contains() <-[Call]- QMaskBetween.applyMo ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     fun mask(text: String, maskChar: Char = '*'): String {
         return text.replaceRange(this.toRange(), maskChar.toString().repeat(end - start))
     }
 }
 
-// CallChain[size=12] = QReplacer <-[Ref]- String.qMaskAndReplace() <-[Call]- String.qMaskAndReplace ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=6] = QReplacer <-[Ref]- String.qMaskAndReplace() <-[Call]- QMaskResult.replaceAndU ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal class QReplacer(start: Int, end: Int, val replacement: String) : QMutRegion(start, end)
 
-// CallChain[size=13] = QMaskResult <-[Ref]- QMaskBetween.apply() <-[Propag]- QMaskBetween.QMaskBetw ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=6] = QMaskResult <-[Ref]- QMask.apply() <-[Propag]- QMask.KOTLIN_STRING <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal class QMaskResult(val maskedStr: String, val orgText: String, val maskChar: Char) {
-    // CallChain[size=4] = QMaskResult.replaceAndUnmask() <-[Call]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=4] = QMaskResult.replaceAndUnmask() <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     /**
      * Apply regex to masked string.
      * Apply replacement to original text.
@@ -302,12 +302,12 @@ internal class QMaskResult(val maskedStr: String, val orgText: String, val maskC
         return orgText.qMaskAndReplace(maskedStr, ptn, replacement, findAll)
     }
 
-    // CallChain[size=7] = QMaskResult.applyMoreMask() <-[Call]- QMultiMask.apply() <-[Propag]- QMultiMa ... l]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=7] = QMaskResult.applyMoreMask() <-[Call]- QMultiMask.apply() <-[Propag]- QMultiMa ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     fun applyMoreMask(mask: QMaskBetween): QMaskResult {
         return mask.applyMore(maskedStr, orgText)
     }
 
-    // CallChain[size=14] = QMaskResult.toString() <-[Propag]- QMaskResult <-[Ref]- QMaskBetween.apply() ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=7] = QMaskResult.toString() <-[Propag]- QMaskResult <-[Ref]- QMask.apply() <-[Prop ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     override fun toString(): String {
         val original = orgText.qWithNewLineSurround(onlyIf = QOnlyIfStr.Multiline)
         val masked = maskedStr.replace(maskChar, '*').qWithNewLineSurround(onlyIf = QOnlyIfStr.Multiline)
@@ -316,7 +316,7 @@ internal class QMaskResult(val maskedStr: String, val orgText: String, val maskC
     }
 }
 
-// CallChain[size=4] = CharSequence.qMask() <-[Call]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=4] = CharSequence.qMask() <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal fun CharSequence.qMask(vararg mask: QMask): QMaskResult {
     mask.size.qaNotZero()
 
@@ -336,7 +336,7 @@ internal fun CharSequence.qMask(vararg mask: QMask): QMaskResult {
     }
 }
 
-// CallChain[size=14] = String.qFindBetween() <-[Call]- QMaskBetween.applyMore() <-[Call]- QMaskBetw ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=9] = String.qFindBetween() <-[Call]- QMaskBetween.applyMore() <-[Call]- QMaskBetwe ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal fun String.qFindBetween(
     startSequence: String,
     endSequence: String,
@@ -363,7 +363,7 @@ internal fun String.qFindBetween(
     return finder.find(this)
 }
 
-// CallChain[size=11] = String.qMaskAndReplace() <-[Call]- String.qMaskAndReplace() <-[Call]- String ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=5] = String.qMaskAndReplace() <-[Call]- QMaskResult.replaceAndUnmask() <-[Call]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 private fun String.qMaskAndReplace(
     maskedStr: String,
     ptn: Regex,
@@ -397,19 +397,7 @@ private fun String.qMaskAndReplace(
     return qMultiReplace(replacers)
 }
 
-// CallChain[size=10] = String.qMaskAndReplace() <-[Call]- String.qApplyColorNestable() <-[Call]- St ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
-internal fun String.qMaskAndReplace(
-    mask: QMask,
-    ptn: Regex,
-    replacement: String = "$1",
-    replaceAll: Boolean = true,
-): String {
-    val maskResult = mask.apply(this)
-
-    return qMaskAndReplace(maskResult.maskedStr, ptn, replacement, replaceAll)
-}
-
-// CallChain[size=12] = CharSequence.qMultiReplace() <-[Call]- String.qMaskAndReplace() <-[Call]- St ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=6] = CharSequence.qMultiReplace() <-[Call]- String.qMaskAndReplace() <-[Call]- QMa ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 /**
  * currently does not support region overlap
  */
@@ -425,7 +413,7 @@ internal fun CharSequence.qMultiReplace(replacers: List<QReplacer>): String {
     return sb.toString()
 }
 
-// CallChain[size=12] = MatchResult.qResolveReplacementGroup() <-[Call]- String.qMaskAndReplace() <- ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=6] = MatchResult.qResolveReplacementGroup() <-[Call]- String.qMaskAndReplace() <-[ ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal fun MatchResult.qResolveReplacementGroup(replacement: String, orgText: String): String {
     var resolveGroup = replacement
 
@@ -444,20 +432,20 @@ internal fun MatchResult.qResolveReplacementGroup(replacement: String, orgText: 
     return resolveGroup
 }
 
-// CallChain[size=13] = CharSequence.qReplace() <-[Call]- MatchResult.qResolveReplacementGroup() <-[ ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=7] = CharSequence.qReplace() <-[Call]- MatchResult.qResolveReplacementGroup() <-[C ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal fun CharSequence.qReplace(oldValue: String, newValue: String, escapeChar: Char): String {
     return replace(Regex("""(?<!\Q$escapeChar\E)\Q$oldValue\E"""), newValue)
 }
 
-// CallChain[size=16] = QSequenceReader <-[Call]- QBetween.find() <-[Call]- String.qFindBetween() <- ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=11] = QSequenceReader <-[Call]- QBetween.find() <-[Call]- String.qFindBetween() <- ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal class QSequenceReader(text: CharSequence) : QCharReader(text) {
-    // CallChain[size=18] = QSequenceReader.sequenceOffset <-[Call]- QSequenceReader.offsetInSequence()  ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
-    var sequenceOffset = 0
+    // CallChain[size=13] = QSequenceReader.sequenceOffset <-[Call]- QSequenceReader.offsetInSequence()  ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    private var sequenceOffset = 0
 
-    // CallChain[size=18] = QSequenceReader.sequence <-[Call]- QSequenceReader.peekCurrentCharInSequence ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
-    var sequence: CharArray? = null
+    // CallChain[size=13] = QSequenceReader.sequence <-[Call]- QSequenceReader.peekCurrentCharInSequence ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    private var sequence: CharArray? = null
 
-    // CallChain[size=17] = QSequenceReader.startReadingSequence() <-[Call]- QSequenceReader.detectSeque ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=12] = QSequenceReader.startReadingSequence() <-[Call]- QSequenceReader.detectSeque ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     private fun startReadingSequence(sequence: CharArray): Boolean {
         return if (!hasNextChar(sequence.size)) {
             false
@@ -468,7 +456,7 @@ internal class QSequenceReader(text: CharSequence) : QCharReader(text) {
         }
     }
 
-    // CallChain[size=17] = QSequenceReader.endReadingSequence() <-[Call]- QSequenceReader.detectSequenc ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=12] = QSequenceReader.endReadingSequence() <-[Call]- QSequenceReader.detectSequenc ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     private fun endReadingSequence(success: Boolean): Boolean {
 
         if (!success) {
@@ -480,13 +468,13 @@ internal class QSequenceReader(text: CharSequence) : QCharReader(text) {
         return success
     }
 
-    // CallChain[size=17] = QSequenceReader.hasNextCharInSequence() <-[Call]- QSequenceReader.detectSequ ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
-    fun hasNextCharInSequence(): Boolean {
+    // CallChain[size=12] = QSequenceReader.hasNextCharInSequence() <-[Call]- QSequenceReader.detectSequ ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    private fun hasNextCharInSequence(): Boolean {
         return if (sequence == null) {
             false
         } else {
             (offsetInSequence() < sequence!!.size) &&
-                hasNextChar()
+                    hasNextChar()
         }
     }
 
@@ -494,20 +482,20 @@ internal class QSequenceReader(text: CharSequence) : QCharReader(text) {
 //        return sequence!![offset - sequenceOffset]
 //    }
 
-    // CallChain[size=17] = QSequenceReader.peekCurrentCharInSequence() <-[Call]- QSequenceReader.detect ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
-    fun peekCurrentCharInSequence(): Char {
+    // CallChain[size=12] = QSequenceReader.peekCurrentCharInSequence() <-[Call]- QSequenceReader.detect ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    private fun peekCurrentCharInSequence(): Char {
         return sequence!![offsetInSequence()]
     }
 
-    // CallChain[size=17] = QSequenceReader.offsetInSequence() <-[Call]- QSequenceReader.detectSequence( ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=12] = QSequenceReader.offsetInSequence() <-[Call]- QSequenceReader.detectSequence( ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     /**
      * 0 to sequence.size - 1
      */
-    fun offsetInSequence(): Int {
+    private fun offsetInSequence(): Int {
         return offset - sequenceOffset
     }
 
-    // CallChain[size=16] = QSequenceReader.detectSequence() <-[Call]- QBetween.find() <-[Call]- String. ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=11] = QSequenceReader.detectSequence() <-[Call]- QBetween.find() <-[Call]- String. ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     /**
      * If sequence is detected, move offset by the length of the sequence.
      * If no sequence is found, offset remains unchanged.
@@ -534,20 +522,22 @@ internal class QSequenceReader(text: CharSequence) : QCharReader(text) {
             success
         }
     }
+
+    
 }
 
-// CallChain[size=17] = QCharReader <-[Call]- QSequenceReader <-[Call]- QBetween.find() <-[Call]- St ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=12] = QCharReader <-[Call]- QSequenceReader <-[Call]- QBetween.find() <-[Call]- St ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal open class QCharReader(val text: CharSequence) {
-    // CallChain[size=18] = QCharReader.offset <-[Propag]- QCharReader <-[Call]- QSequenceReader <-[Call ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=13] = QCharReader.offset <-[Propag]- QCharReader <-[Call]- QSequenceReader <-[Call ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     var offset = 0
 
-    // CallChain[size=18] = QCharReader.lineNumber() <-[Propag]- QCharReader <-[Call]- QSequenceReader < ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=13] = QCharReader.lineNumber() <-[Propag]- QCharReader <-[Call]- QSequenceReader < ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     fun lineNumber(): Int {
         // Consider caret to be between the character on the offset and the character preceding it
         //
         // ex. ( [ ] indicate offsets )
-        // [\n]abc\n --> 1
-        // \n[\n] --> 2
+        // [\n]abc\n --> lineNumber is 1 "First Line"
+        // \n[\n] --> lineNumber is 2 "Second Line"
 
         var lineBreakCount = 0
 
@@ -564,7 +554,7 @@ internal open class QCharReader(val text: CharSequence) {
         return lineBreakCount + 1
     }
 
-    // CallChain[size=18] = QCharReader.countIndentSpaces() <-[Propag]- QCharReader <-[Call]- QSequenceR ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=13] = QCharReader.countIndentSpaces() <-[Propag]- QCharReader <-[Call]- QSequenceR ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     fun countIndentSpaces(space: Char = ' '): Int {
         var count = 0
 
@@ -601,56 +591,74 @@ internal open class QCharReader(val text: CharSequence) {
         return count
     }
 
-    // CallChain[size=18] = QCharReader.hasNextChar() <-[Propag]- QCharReader <-[Call]- QSequenceReader  ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=13] = QCharReader.hasNextChar() <-[Propag]- QCharReader <-[Call]- QSequenceReader  ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     inline fun hasNextChar(len: Int = 1): Boolean {
         return offset + len - 1 < text.length
     }
 
-    // CallChain[size=18] = QCharReader.isOffsetEOF() <-[Propag]- QCharReader <-[Call]- QSequenceReader  ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=13] = QCharReader.isOffsetEOF() <-[Propag]- QCharReader <-[Call]- QSequenceReader  ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     inline fun isOffsetEOF(): Boolean {
         return offset == text.length - 1
     }
 
-    // CallChain[size=18] = QCharReader.isValidOffset() <-[Propag]- QCharReader <-[Call]- QSequenceReade ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=13] = QCharReader.isValidOffset() <-[Propag]- QCharReader <-[Call]- QSequenceReade ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     inline fun isValidOffset(): Boolean {
         return 0 <= offset && offset < text.length
     }
 
-    // CallChain[size=18] = QCharReader.hasPreviousChar() <-[Propag]- QCharReader <-[Call]- QSequenceRea ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=13] = QCharReader.hasPreviousChar() <-[Propag]- QCharReader <-[Call]- QSequenceRea ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     inline fun hasPreviousChar(len: Int = 1): Boolean {
         return 0 < offset - len + 1
     }
 
-    // CallChain[size=18] = QCharReader.previousChar() <-[Propag]- QCharReader <-[Call]- QSequenceReader ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
-    inline fun previousChar(len: Int = 1) {
+    // CallChain[size=13] = QCharReader.previousChar() <-[Propag]- QCharReader <-[Call]- QSequenceReader ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    inline fun previousChar(len: Int = 1): Char {
         offset -= len
+        return text[offset]
     }
 
-    // CallChain[size=18] = QCharReader.currentChar() <-[Propag]- QCharReader <-[Call]- QSequenceReader  ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=13] = QCharReader.currentChar() <-[Propag]- QCharReader <-[Call]- QSequenceReader  ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     inline fun currentChar(): Char {
         return text[offset]
     }
 
-    // CallChain[size=18] = QCharReader.peekNextChar() <-[Propag]- QCharReader <-[Call]- QSequenceReader ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
-    fun peekNextChar(): Char {
+    // CallChain[size=13] = QCharReader.peekNextChar() <-[Propag]- QCharReader <-[Call]- QSequenceReader ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    inline fun peekNextChar(): Char {
         return text[offset]
     }
 
-    // CallChain[size=18] = QCharReader.moveOffset() <-[Propag]- QCharReader <-[Call]- QSequenceReader < ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=13] = QCharReader.moveOffset() <-[Propag]- QCharReader <-[Call]- QSequenceReader < ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     inline fun moveOffset(plus: Int = 1) {
         offset += plus
     }
 
-    // CallChain[size=18] = QCharReader.nextChar() <-[Propag]- QCharReader <-[Call]- QSequenceReader <-[ ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=13] = QCharReader.nextChar() <-[Propag]- QCharReader <-[Call]- QSequenceReader <-[ ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     /**
      * Read current offset char and add offset by 1.
      */
     inline fun nextChar(): Char {
         return text[offset++]
     }
+
+    // CallChain[size=13] = QCharReader.nextStringExcludingCurOffset() <-[Propag]- QCharReader <-[Call]- ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    fun nextStringExcludingCurOffset(length: Int): String {
+        val str = text.substring(offset + 1, (offset + 1 + length).coerceAtMost(text.length))
+        offset += length
+        return str
+    }
+
+    // CallChain[size=13] = QCharReader.peekNextStringIncludingCurOffset() <-[Propag]- QCharReader <-[Ca ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    fun peekNextStringIncludingCurOffset(length: Int): String {
+        return text.substring(offset, (offset + length).coerceAtMost(text.length))
+    }
+
+    // CallChain[size=13] = QCharReader.peekPreviousStringExcludingCurOffset() <-[Propag]- QCharReader < ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    fun peekPreviousStringExcludingCurOffset(length: Int): String {
+        return text.substring(offset - length, offset)
+    }
 }
 
-// CallChain[size=15] = QBetween <-[Call]- String.qFindBetween() <-[Call]- QMaskBetween.applyMore()  ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=10] = QBetween <-[Call]- String.qFindBetween() <-[Call]- QMaskBetween.applyMore()  ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 private class QBetween(
     val startSequence: String,
     val endSequence: String,
@@ -665,7 +673,7 @@ private class QBetween(
     val regionIncludeStartAndEndSequence: Boolean = false,
 ) {
 
-    // CallChain[size=15] = QBetween.find() <-[Call]- String.qFindBetween() <-[Call]- QMaskBetween.apply ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=10] = QBetween.find() <-[Call]- String.qFindBetween() <-[Call]- QMaskBetween.apply ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     fun find(text: CharSequence): List<QRegion> {
         val reader = QSequenceReader(text)
 

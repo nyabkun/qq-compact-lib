@@ -101,7 +101,7 @@ class QChainNode(
         val compactEle = topLevelCompactElement()
         return compactEle.chainNodes.filter {
             !it.isTopLevel() &&
-                it.outerNodes().map { outer -> outer.key }.contains(this.key)
+                    it.outerNodes().map { outer -> outer.key }.contains(this.key)
         }.toList()
     }
 
@@ -110,10 +110,13 @@ class QChainNode(
         return when (targetSrcLevel) {
             QSrcLevel.Top ->
                 emptyList()
+
             QSrcLevel.Second ->
                 listOf(topLevel.qCallChainNode(analysisCtx))
+
             QSrcLevel.Third ->
                 listOf(topLevel.qCallChainNode(analysisCtx), secondLevel!!.qCallChainNode(analysisCtx))
+
             QSrcLevel.Deep ->
                 listOf(
                     topLevel.qCallChainNode(analysisCtx),
@@ -295,20 +298,21 @@ class QChainNode(
                 return@mapNotNull null
             }
 
-            if (visitor.isMustDiscard(targetNode)) {
+            if (visitor.isMustDiscard(QIsMustDiscardScope(analysisCtx.lib, targetNode, this, true))) {
                 return@mapNotNull null
             }
 
-            if (visitor.isMustMark(targetNode)) {
+            if (visitor.isMustMark(QIsMustMarkScope(analysisCtx.lib, targetNode, this, true))) {
                 return@mapNotNull QChain(targetNode, this, chainType, true, analysisCtx)
             }
 
             if (visitor.propagated(
                     QNodePropagatedScope(
-                            target = targetNode,
-                            from = this,
-                            type = chainType.toPropagationType()
-                        )
+                        lib = analysisCtx.lib,
+                        target = targetNode,
+                        from = this,
+                        type = chainType.toPropagationType()
+                    )
                 ) == QNodeVisited.MarkThisNodeAndContinueChain
             ) {
                 QChain(targetNode, this, chainType, false, analysisCtx)
@@ -542,7 +546,7 @@ class QChainNode(
 
     // << Root of the CallChain >>
     override fun equals(other: Any?): Boolean {
-        if( other == null || other !is QChainNode) {
+        if (other == null || other !is QChainNode) {
             return false
         }
 
@@ -571,8 +575,10 @@ enum class QChainType(val shortName: String) {
         return when (this) {
             PropagatedFromSibling ->
                 QPropagationType.FromTopLevel
+
             PropagatedFromTopLevel ->
                 QPropagationType.FromSibling
+
             ByTypeReference, ByCall ->
                 qUnreachable()
         }
@@ -618,6 +624,7 @@ class QChain(
     val isPropagated: Boolean = when (type) {
         QChainType.PropagatedFromSibling, QChainType.PropagatedFromTopLevel ->
             true
+
         QChainType.ByCall, QChainType.ByTypeReference ->
             false
     }

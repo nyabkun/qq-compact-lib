@@ -15,8 +15,8 @@ package nyab.compact
 
 // << Root of the CallChain >>
 class QNodeVisitor(
-    val isMustMark: QChainNode.() -> Boolean,
-    val isMustDiscard: QChainNode.() -> Boolean,
+    val isMustMark: QIsMustMarkScope.() -> Boolean,
+    val isMustDiscard: QIsMustDiscardScope.() -> Boolean,
     val resolved: QNodeResolvedScope.() -> QNodeVisited,
     val propagated: QNodePropagatedScope.() -> QNodeVisited,
 )
@@ -25,42 +25,34 @@ class QNodeVisitor(
 @QCompactLibDsl
 class QNodeVisitorScope internal constructor() {
     // << Root of the CallChain >>
-    private var isMustMark: QChainNode.() -> Boolean = {
-        isEnumEntry() || isClassInitializer() || isOverridden() || isInOpenClass() || isInAbstractClass() || hasOpenKeyword() || isCompanionObject() || isInInterface()
-    }
+    private var isMustDiscard: QIsMustDiscardScope.() -> Boolean = QIsMustDiscardScope::default
 
     // << Root of the CallChain >>
-    private var isMustDiscard: QChainNode.() -> Boolean = {
-        false
-    }
+    private var isMustMark: QIsMustMarkScope.() -> Boolean = QIsMustMarkScope::default
 
     // << Root of the CallChain >>
-    private var resolved: QNodeResolvedScope.() -> QNodeVisited = {
-        QNodeVisited.MarkThisNodeAndContinueChain
-    }
+    private var resolved: QNodeResolvedScope.() -> QNodeVisited = QNodeResolvedScope::default
 
     // << Root of the CallChain >>
-    private var propagated: QNodePropagatedScope.() -> QNodeVisited = {
-        QNodeVisited.DiscardThisNodeAndStopChain
-    }
+    private var propagated: QNodePropagatedScope.() -> QNodeVisited = QNodePropagatedScope::default
 
     // << Root of the CallChain >>
     private fun build(): QNodeVisitor {
         return QNodeVisitor(
-                isMustMark = isMustMark,
-                isMustDiscard = isMustDiscard,
-                resolved = resolved,
-                propagated = propagated,
+            isMustMark = isMustMark,
+            isMustDiscard = isMustDiscard,
+            resolved = resolved,
+            propagated = propagated,
         )
     }
 
     // << Root of the CallChain >>
-    fun isMustMark(block: QChainNode.() -> Boolean) {
+    fun isMustMark(block: QIsMustMarkScope.() -> Boolean) {
         this.isMustMark = block
     }
 
     // << Root of the CallChain >>
-    fun isMustDiscard(block: QChainNode.() -> Boolean) {
+    fun isMustDiscard(block: QIsMustDiscardScope.() -> Boolean) {
         this.isMustDiscard = block
     }
 
@@ -77,16 +69,73 @@ class QNodeVisitorScope internal constructor() {
 
 // << Root of the CallChain >>
 @QCompactLibDsl
+class QIsMustMarkScope internal constructor(
+    val lib: QCompactLib,
+    val target: QChainNode,
+    val from: QChainNode,
+    val isPropagated: Boolean
+) {
+    // << Root of the CallChain >>
+    fun default(): Boolean {
+        if( !isPropagated )
+            return false
+
+        if (lib.noPropagationClasses.any { target.topLevel.qFqName() == it.qualifiedName} ) {
+            return false
+        }
+
+        if (lib.fullPropagationClasses.any { it.qualifiedName == target.topLevel.qFqName() }) {
+            return true
+        }
+
+        return target.run {
+            isEnumEntry() || isClassInitializer() || isOverridden() || isInOpenClass() || isInAbstractClass() || hasOpenKeyword() || isCompanionObject() || isInInterface()
+        }
+    }
+}
+
+// << Root of the CallChain >>
+@QCompactLibDsl
+class QIsMustDiscardScope internal constructor(
+    val lib: QCompactLib,
+    val target: QChainNode,
+    val from: QChainNode,
+    val isPropagated: Boolean
+) {
+    // << Root of the CallChain >>
+    fun default(): Boolean {
+        return false
+    }
+}
+
+// << Root of the CallChain >>
+@QCompactLibDsl
 class QNodeResolvedScope internal constructor(
-        val target: QChainNode,
-        val from: QChainNode,
-        val type: QResolvedType,
-)
+    val lib: QCompactLib,
+    val target: QChainNode,
+    val from: QChainNode,
+    val type: QResolvedType,
+) {
+    // << Root of the CallChain >>
+    fun default(): QNodeVisited {
+        return QNodeVisited.MarkThisNodeAndContinueChain
+    }
+}
 
 // << Root of the CallChain >>
 @QCompactLibDsl
 class QNodePropagatedScope internal constructor(
-        val target: QChainNode,
-        val from: QChainNode,
-        val type: QPropagationType,
-)
+    val lib: QCompactLib,
+    val target: QChainNode,
+    val from: QChainNode,
+    val type: QPropagationType,
+) {
+    // << Root of the CallChain >>
+    fun default(): QNodeVisited {
+//        if (lib.noPropagationClasses.any { target.topLevel.qFqName() == it.qualifiedName} ) {
+//            return QNodeVisited.DiscardThisNodeAndStopChain
+//        }
+
+        return QNodeVisited.DiscardThisNodeAndStopChain
+    }
+}

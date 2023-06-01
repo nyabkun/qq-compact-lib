@@ -12,6 +12,7 @@
 
 package nyab.test
 
+import java.lang.reflect.Method
 import kotlin.reflect.KFunction
 import nyab.conf.QE
 import nyab.conf.QMyMark
@@ -26,7 +27,7 @@ import nyab.util.blue
 import nyab.util.light_gray
 import nyab.util.light_green
 import nyab.util.light_yellow
-import nyab.util.noColor
+import nyab.util.noStyle
 import nyab.util.qBrackets
 import nyab.util.qIsDebugging
 import nyab.util.qIsTesting
@@ -38,32 +39,32 @@ import nyab.util.qWithNewLineSurround
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
-// CallChain[size=3] = qFailMsg() <-[Call]- Any?.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
+// CallChain[size=3] = qFailMsg() <-[Call]- Any.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
 private fun qFailMsg(msg: String = "it is null"): String {
     val cMsg = "[$msg]".colorIt
-    return "${QMyMark.WARN} $cMsg"
+    return "${QMyMark.warn} $cMsg"
 }
 
-// CallChain[size=3] = qFailMsg() <-[Call]- Any?.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
+// CallChain[size=3] = qFailMsg() <-[Call]- Any.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
 private fun qFailMsg(actual: Any?, msg: String = "is not equals to", expected: Any?): String {
     val cMsg = "[$msg]".colorIt
     val actualStr = actual.qToLogString() + " " + "(actual)".light_green
     val expectedStr = expected.qToLogString() + " " + "(expected)".blue
-    return "${QMyMark.WARN} ${actualStr.qWithNewLineSurround(onlyIf = QOnlyIfStr.Always)}$cMsg${
+    return "${QMyMark.warn} ${actualStr.qWithNewLineSurround(onlyIf = QOnlyIfStr.Always)}$cMsg${
         expectedStr.qWithNewLinePrefix(onlyIf = QOnlyIfStr.Always)
     }"
 }
 
-// CallChain[size=4] = colorIt <-[Call]- qFailMsg() <-[Call]- Any?.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
+// CallChain[size=4] = String.colorIt <-[Call]- qFailMsg() <-[Call]- Any.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
 private val String.colorIt: String
     get() = this.light_yellow
 
-// CallChain[size=3] = qThrowIt() <-[Call]- Any?.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
+// CallChain[size=3] = qThrowIt() <-[Call]- Any.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
 private fun qThrowIt(msg: String, exception: QE) {
     throw QException(exception, msg, null, stackDepth = 2, srcCut = QSrcCut.MULTILINE_INFIX_NOCUT)
 }
 
-// CallChain[size=2] = Any?.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
+// CallChain[size=2] = Any.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
 internal infix fun Any?.shouldBe(expected: Any?) {
     if (!qOkToTest()) return
 
@@ -82,7 +83,7 @@ internal infix fun Any?.shouldBe(expected: Any?) {
     val thisStr = this.qToLogString()
     val expectedStr = expected.qToLogString()
 
-    if (thisStr.trim().noColor != expectedStr.trim().noColor) {
+    if (thisStr.trim().noStyle != expectedStr.trim().noStyle) {
         val msg = qFailMsg(thisStr, "is not equals to", expectedStr)
 
         val diffIdx =
@@ -123,7 +124,7 @@ internal infix fun Any?.shouldBe(expected: Any?) {
     }
 }
 
-// CallChain[size=3] = qOkToTest() <-[Call]- Any?.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
+// CallChain[size=3] = qOkToTest() <-[Call]- Any.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
 private inline fun qOkToTest(): Boolean {
     return QMyTest.forceTestMode || qIsTesting || qIsDebugging
 }

@@ -72,7 +72,7 @@ internal class QFlagSet<T>(val enumClass: KClass<T>, override var bits: Int) : Q
         enumValues.filter { contains(it) }
 }
 
-// CallChain[size=9] = QFlag<T>.plus() <-[Call]- Path.qCopyFileTo() <-[Call]- QBackupFile.createBack ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=9] = QFlag<T>.plus() <-[Call]- Path.qCopyFileTo() <-[Call]- QBackupFile.createBack ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 @Suppress("UNCHECKED_CAST")
 internal operator fun <T> QFlag<T>.plus(other: QFlag<T>): QFlagSet<T> where T : QFlag<T>, T : Enum<T> {
     return if (this is QFlagSet) {

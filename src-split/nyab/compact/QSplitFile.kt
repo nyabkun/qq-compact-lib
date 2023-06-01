@@ -12,6 +12,7 @@ package nyab.compact
 
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.*
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtFileAnnotationList
 import org.jetbrains.kotlin.psi.KtImportList
@@ -37,11 +38,11 @@ class QSplitFile(val ktFile: KtFile, val analysisCtx: QAnalysisContext) {
 
     // << Root of the CallChain >>
     fun toSrcCode(): String {
-        val anno = lib.splitFileAnnotation(QSplitFileAnnotationCreationContext(analysisCtx, ktFile))
+        val anno = lib.splitFileAnnotation(QSplitFileAnnotationCreationScope(analysisCtx, analysisCtx.isTest, ktFile))
 
         val pkg = ktFile.packageDirective?.text ?: ""
 
-        return lib.srcHeader + "\n\n" +
+        return lib.srcHeader(QLicenseScope(lib, Calendar.getInstance().get(Calendar.YEAR), lib.author)) + "\n\n" +
                 if (anno.isNotEmpty()) {
                     anno + "\n\n"
                 } else {
@@ -98,7 +99,9 @@ class QSplitFile(val ktFile: KtFile, val analysisCtx: QAnalysisContext) {
         get() {
             val rootDir = if (!analysisCtx.isTest) lib.destSplitMainDir else lib.destSplitTestDir
             return if (ktFile.packageFqName.toString() == "<root>") {
-                Paths.get(ktFile.name)
+                rootDir.resolve(
+                    Paths.get(ktFile.name)
+                )
             } else {
                 rootDir.resolve(
                     Paths.get(ktFile.packageFqName.toString().replace(".", "/")).resolve(ktFile.name)

@@ -1,0 +1,5 @@
+## main
+CompactHelloWorld.hello() [KtNamedFunction] <Second Level> : 3
+ ChaoticClass.sayHello() [KtNamedFunction] <Second Level> : 1
+
+## test

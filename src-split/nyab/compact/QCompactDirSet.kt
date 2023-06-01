@@ -19,8 +19,8 @@ import nyab.util.path
 
 // << Root of the CallChain >>
 class QCompactLibSrcDirSet(
-        val main: List<Path>,
-        val test: List<Path>,
+    val main: List<Path>,
+    val test: List<Path>,
 )
 
 // << Root of the CallChain >>
@@ -34,8 +34,8 @@ class QCompactLibSrcDirSetScope {
     // << Root of the CallChain >>
     private fun build(): QCompactLibSrcDirSet {
         return QCompactLibSrcDirSet(
-                main = main,
-                test = test
+            main = main,
+            test = test
         )
     }
 

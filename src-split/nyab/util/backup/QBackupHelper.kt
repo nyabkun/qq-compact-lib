@@ -13,7 +13,7 @@ package nyab.util.backup
 import java.nio.file.Path
 import kotlin.math.abs
 import nyab.conf.QMyPath
-import nyab.util.QIfExistsCopy
+import nyab.util.QIfExistsCopyFile
 import nyab.util.QIfExistsCreateDir
 import nyab.util.qChangeParentDir
 import nyab.util.qCreateDir
@@ -24,7 +24,7 @@ import nyab.util.qWithDateTime
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
-// CallChain[size=4] = Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=4] = Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qTryBackup(
         // Use the original file name as the folder name and place the backup file inside the folder.
         backupDir: Path = this.qWithBaseDir(QMyPath.backup),
@@ -35,14 +35,14 @@ internal fun Path.qTryBackup(
     return bh.tryBackup(now)
 }
 
-// CallChain[size=5] = QBackupHelper <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=5] = QBackupHelper <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 // TODO use hash
 private class QBackupHelper(
         val originalFile: Path,
         val backupDir: Path,
         vararg slots: QBackupSlot,
 ) {
-    // CallChain[size=7] = QBackupHelper.filesInSlot <-[Call]- QBackupHelper.fillSlots() <-[Call]- QBack ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=7] = QBackupHelper.filesInSlot <-[Call]- QBackupHelper.fillSlots() <-[Call]- QBack ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     val filesInSlot: Array<QFileInBackupSlot> = run {
         val slotsEx = if (slots.none {
                     it.periodMilli == Long.MAX_VALUE
@@ -59,7 +59,7 @@ private class QBackupHelper(
         slotsEx.map { QFileInBackupSlot(it) }.toTypedArray()
     }
 
-    // CallChain[size=5] = QBackupHelper.tryBackup() <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=5] = QBackupHelper.tryBackup() <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     fun tryBackup(now: Long = qNow): Path? {
         clearSlots()
 
@@ -68,19 +68,19 @@ private class QBackupHelper(
         return fillSlots(bFiles, now)
     }
 
-    // CallChain[size=6] = QBackupHelper.clearSlots() <-[Call]- QBackupHelper.tryBackup() <-[Call]- Path ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=6] = QBackupHelper.clearSlots() <-[Call]- QBackupHelper.tryBackup() <-[Call]- Path ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     private fun clearSlots() {
         for (slot in filesInSlot) {
             slot.backupFile = null
         }
     }
 
-    // CallChain[size=8] = QBackupHelper.backupPath() <-[Call]- QBackupHelper.newBackupFile() <-[Call]-  ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=8] = QBackupHelper.backupPath() <-[Call]- QBackupHelper.newBackupFile() <-[Call]-  ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     private fun backupPath(now: Long): Path {
         return originalFile.qWithDateTime(qKWD_BACKUP, now).qChangeParentDir(backupDir)
     }
 
-    // CallChain[size=7] = QBackupHelper.listBackupFilesExisting() <-[Call]- QBackupHelper.listBackupFil ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=7] = QBackupHelper.listBackupFilesExisting() <-[Call]- QBackupHelper.listBackupFil ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     private fun listBackupFilesExisting(): MutableList<QBackupFile> {
         backupDir.qCreateDir(QIfExistsCreateDir.DoNothing)
 
@@ -97,12 +97,12 @@ private class QBackupHelper(
         return bFileList
     }
 
-    // CallChain[size=7] = QBackupHelper.newBackupFile() <-[Call]- QBackupHelper.listBackupFilesWithNewB ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=7] = QBackupHelper.newBackupFile() <-[Call]- QBackupHelper.listBackupFilesWithNewB ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     private fun newBackupFile(now: Long): QBackupFile {
         return QBackupFile(backupPath(now), true)
     }
 
-    // CallChain[size=6] = QBackupHelper.listBackupFilesWithNewBackupCandidate() <-[Call]- QBackupHelper ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=6] = QBackupHelper.listBackupFilesWithNewBackupCandidate() <-[Call]- QBackupHelper ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     private fun listBackupFilesWithNewBackupCandidate(now: Long): List<QBackupFile> {
         val bFileList = listBackupFilesExisting()
 
@@ -111,7 +111,7 @@ private class QBackupHelper(
         return bFileList
     }
 
-    // CallChain[size=7] = QBackupHelper.findBestFileInSlots() <-[Call]- QBackupHelper.fillSlots() <-[Ca ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=7] = QBackupHelper.findBestFileInSlots() <-[Call]- QBackupHelper.fillSlots() <-[Ca ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     private fun findBestFileInSlots(slot: QBackupSlot, backupFiles: List<QBackupFile>, oldest: QBackupFile?, now: Long): QBackupFile? {
         var minDistance = Long.MAX_VALUE
         var bestFileInSlot: QBackupFile? = null
@@ -137,7 +137,7 @@ private class QBackupHelper(
         return bestFileInSlot
     }
 
-    // CallChain[size=6] = QBackupHelper.fillSlots() <-[Call]- QBackupHelper.tryBackup() <-[Call]- Path. ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=6] = QBackupHelper.fillSlots() <-[Call]- QBackupHelper.tryBackup() <-[Call]- Path. ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     /**
      * Creates new backup if necessary.
      *

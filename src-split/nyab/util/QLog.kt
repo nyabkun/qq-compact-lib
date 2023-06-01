@@ -24,13 +24,13 @@ import nyab.conf.QMyPath
 // CallChain[size=10] = qARROW <-[Call]- qArrow() <-[Call]- QLogStyle.qLogArrow() <-[Call]- QLogStyl ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal val qARROW = "===>".light_cyan
 
-// CallChain[size=4] = qIsDebugging <-[Call]- qOkToTest() <-[Call]- Any?.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
+// CallChain[size=4] = qIsDebugging <-[Call]- qOkToTest() <-[Call]- Any.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
 // https://stackoverflow.com/a/28754689/5570400
 internal val qIsDebugging by lazy {
     java.lang.management.ManagementFactory.getRuntimeMXBean().inputArguments.toString().indexOf("jdwp") >= 0
 }
 
-// CallChain[size=4] = qIsTesting <-[Call]- qOkToTest() <-[Call]- Any?.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
+// CallChain[size=4] = qIsTesting <-[Call]- qOkToTest() <-[Call]- Any.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
 // https://stackoverflow.com/a/12717377/5570400
 internal val qIsTesting by lazy {
     qStackFrames(size = Int.MAX_VALUE).any {
@@ -55,7 +55,7 @@ internal class QSrcCut(
             mySrc.replaceFirst("""(?s)(?m)^(\s*)(\S.+)\.qLog[a-zA-Z]{0,10}.*$""".re, "$1$2")
         }
 
-        // CallChain[size=4] = QSrcCut.CUT_UNTIL_log <-[Call]- QSrcCut.UNTIL_log <-[Call]- logBlue <-[Call]- KtElement.qContainingCallChainNode()[Root]
+        // CallChain[size=4] = QSrcCut.CUT_UNTIL_log <-[Call]- QSrcCut.UNTIL_log <-[Call]- T.logBlue <-[Call]- KtElement.qContainingCallChainNode()[Root]
         private val CUT_UNTIL_log = { mySrc: String ->
             mySrc.replaceFirst("""(?s)(?m)^(\s*)(\S.+)\.log.*$""".re, "$1$2")
         }
@@ -64,11 +64,11 @@ internal class QSrcCut(
         val SINGLE_qLog_PARAM = QSrcCut(QFetchRule.SINGLE_LINE, CUT_PARAM_qLog)
         // CallChain[size=3] = QSrcCut.UNTIL_qLog <-[Call]- T.qLog() <-[Call]- KtElement.qDebug()[Root]
         val UNTIL_qLog = QSrcCut(QFetchRule.SMART_FETCH, CUT_UNTIL_qLog)
-        // CallChain[size=3] = QSrcCut.UNTIL_log <-[Call]- logBlue <-[Call]- KtElement.qContainingCallChainNode()[Root]
+        // CallChain[size=3] = QSrcCut.UNTIL_log <-[Call]- T.logBlue <-[Call]- KtElement.qContainingCallChainNode()[Root]
         val UNTIL_log = QSrcCut(QFetchRule.SMART_FETCH, CUT_UNTIL_log)
         // CallChain[size=4] = QSrcCut.MULTILINE_NOCUT <-[Call]- QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
         val MULTILINE_NOCUT = QSrcCut(QFetchRule.SMART_FETCH) { it }
-        // CallChain[size=4] = QSrcCut.MULTILINE_INFIX_NOCUT <-[Call]- qThrowIt() <-[Call]- Any?.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
+        // CallChain[size=4] = QSrcCut.MULTILINE_INFIX_NOCUT <-[Call]- qThrowIt() <-[Call]- Any.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
         val MULTILINE_INFIX_NOCUT = QSrcCut(QFetchRule.SMART_FETCH_INFIX) { it }
         // CallChain[size=8] = QSrcCut.NOCUT_JUST_SINGLE_LINE <-[Call]- qMySrcLinesAtFrame() <-[Call]- qLogS ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
         val NOCUT_JUST_SINGLE_LINE = QSrcCut(QFetchRule.SINGLE_LINE) { it }
@@ -92,9 +92,9 @@ internal class QLogStyle(
             if (!onlyIf.matches(this))
                 return this
 
-            return """${"SRC START ―――――――――――".qColor(QShColor.CYAN)}
+            return """${"SRC START ―――――――――――".qColor(QShColor.Cyan)}
 ${this.trim()}
-${"SRC END   ―――――――――――".qColor(QShColor.CYAN)}"""
+${"SRC END   ―――――――――――".qColor(QShColor.Cyan)}"""
         }
 
         // CallChain[size=8] = QLogStyle.qLogArrow() <-[Call]- QLogStyle.S <-[Call]- qLogStackFrames() <-[Ca ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
@@ -131,17 +131,31 @@ $stackTrace
     }
 }
 
-// CallChain[size=2] = log <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=2] = T.log <-[Call]- QCompactLibRepositoryTask.release()[Root]
 internal val <T : Any?> T.log: T
     get() {
         qLog(qToLogString(), stackDepth = 1, srcCut = QSrcCut.UNTIL_log)
         return this
     }
 
-// CallChain[size=2] = logBlue <-[Call]- KtElement.qContainingCallChainNode()[Root]
+// CallChain[size=2] = T.logYellow <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal val <T : Any?> T.logYellow: T
+    get() {
+        qLog(qToLogString().yellow, stackDepth = 1, srcCut = QSrcCut.UNTIL_log)
+        return this
+    }
+
+// CallChain[size=2] = T.logBlue <-[Call]- KtElement.qContainingCallChainNode()[Root]
 internal val <T : Any?> T.logBlue: T
     get() {
         qLog(qToLogString().blue, stackDepth = 1, srcCut = QSrcCut.UNTIL_log)
+        return this
+    }
+
+// CallChain[size=2] = T.logGreen <-[Call]- QCompactLib.createStat()[Root]
+internal val <T : Any?> T.logGreen: T
+    get() {
+        qLog(qToLogString().light_green, stackDepth = 1, srcCut = QSrcCut.UNTIL_log)
         return this
     }
 
@@ -169,7 +183,7 @@ internal fun qMySrcLinesAtFrame(
         src2
     } catch (e: Exception) {
 //        e.message
-        "${QMyMark.WARN} Couldn't cut src lines : ${qBrackets("FileName", frame.fileName, "LineNo", frame.lineNumber, "SrcRoots", srcRoots)}"
+        "${QMyMark.warn} Couldn't cut src lines : ${qBrackets("FileName", frame.fileName, "LineNo", frame.lineNumber, "SrcRoots", srcRoots)}"
     }
 }
 
@@ -211,12 +225,12 @@ internal fun qLogStackFrames(
 
     val text = style.start + output + style.end
 
-    val finalTxt = if (noColor) text.noColor else text
+    val finalTxt = if (noColor) text.noStyle else text
 
     if (!quiet)
         style.out.print(finalTxt)
 
-    return if (noColor) output.noColor else output
+    return if (noColor) output.noStyle else output
 }
 
 // CallChain[size=3] = qLog() <-[Call]- T.qLog() <-[Call]- KtElement.qDebug()[Root]

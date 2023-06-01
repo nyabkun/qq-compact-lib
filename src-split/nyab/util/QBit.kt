@@ -13,5 +13,5 @@ package nyab.util
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
-// CallChain[size=3] = Char.qToHex() <-[Call]- Any?.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
+// CallChain[size=3] = Char.qToHex() <-[Call]- Any.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
 internal fun Char.qToHex(): String = String.format("%02X", code)

@@ -11,6 +11,7 @@
 package compact
 
 import kotlinx.coroutines.runBlocking
+import nyab.compact.QCompactLibRepositoryTask
 import nyab.compact.QCompactLibResult
 import nyab.compact.QKtVisibilityChange
 import nyab.compact.QTopLevelCompactElement
@@ -20,26 +21,48 @@ import nyab.util.QIfExistsWrite
 import java.nio.file.Paths
 
 fun main(): Unit = runBlocking {
+    // build includes
+    // - analyse src dirs
+    // - create compact src code
+    //   - single-file version
+    //   - split-file version
+    // - create test src code ( if exists )
+    //   - single-file version
+    //   - split-file version
+    // - create example src code
+    // - create jars
+    // - create build.gradle.kts
+    // - create README.md, LICENSE, .gitignore, etc
+    // - run test ( if exists )
+    // - run example
     val result = build()
 
-    // git task includes
-    // - create local git repository
-    // - commit
-    // - create github repository
-    // - push
-    // - release
-//    result.doGitTask()
+//    if( result.buildSuccess ) {
+//        val repo = QCompactLibRepositoryTask(result.lib.destProjDir)
+//
+//        // - create GitHub repository
+//        repo.createGitHubRepo(
+//            result.lib.author,
+//            result.lib.libName,
+//            result.lib.readmeDescription,
+//            listOf("kotlin-library", "hello-world", "compact-library")
+//        )
+//
+//        // - add / commit / push
+//        // - release jars
+//        repo.release("[auto] Reflect the changes of main repository.")
+//    }
 }
 
 private suspend fun build(): QCompactLibResult {
     val result = qCompactLib(
         libName = "hello-world-compact",
-        baseFileName = "CompactHelloWorld",
         author = "nyabkun",
     ) {
-        versionUpdateStrategy = QVersionUpdateStrategy.UpdateOnlyIfSplitSrcHashChanged
+        baseFileName("CompactHelloWorld")
+        exampleSrcFile = Paths.get("rsc-test/src-example/CompactHelloWorldExample.kt")
 
-        repoDescription = """Kotlin library that can say Hello."""
+        versionUpdateStrategy = QVersionUpdateStrategy.UpdateOnlyIfSplitSrcHashChanged
 
         readmeDescription = """Kotlin library that can say Hello."""
 
@@ -52,22 +75,12 @@ private suspend fun build(): QCompactLibResult {
             test("rsc-test/src-test")
         }
 
-        repoTopics = listOf("kotlin-library", "hello-world", "compact-library")
-
         createSingleFileSrc = true
 
         createLibJarFromSplitFileSrc = true
 
-        exampleSrcFile = Paths.get("rsc-test/src-example/${baseFileName}Example.kt")
-
-        destMainSrcFileName = "$baseFileName.kt"
-
-        destTestSrcFileName = "${baseFileName}Test.kt"
-
-        destExampleSrcFileName = "${baseFileName}Example.kt"
-
         ifFileExists {
-            ifExistsReadeMeFile = QIfExistsWrite.BackupAndOverwriteAtomic
+            ifExistsReadMeFile = QIfExistsWrite.BackupAndOverwriteAtomic
 //                        ifExistsReadeMeFile = QIfExistsWrite.DoNothing
         }
 
@@ -75,20 +88,7 @@ private suspend fun build(): QCompactLibResult {
             default()
         }
 
-        rootOfChain {
-            mainTopLevel {
-                fileName == "${lib.baseFileName}.kt"
-            }
-            testTopLevel {
-                fileName == "${lib.baseFileName}Test.kt"
-            }
-        }
-
         splitSrcFileImportFilter filter@{
-            if (fileName == "QDep.kt" && (importPath == "nyab.util.children" || importPath == "nyab.util.parent")) {
-                return@filter false
-            }
-
             default()
         }
 
@@ -102,20 +102,6 @@ private suspend fun build(): QCompactLibResult {
             a.filePath.compareTo(b.filePath)
         }.thenComparator { a, b ->
             a.lineNumber.compareTo(b.lineNumber)
-        }
-
-        nonRootNodeVisitor {
-            isMustDiscard {
-                if (pkgFqName.contains("q_ignore")) {
-                    return@isMustDiscard true
-                }
-
-                false
-            }
-
-            isMustMark {
-                isEnumEntry() || isClassInitializer() || isOverridden() || isInOpenClass() || isInAbstractClass() || hasOpenKeyword() || isCompanionObject() || isInInterface()
-            }
         }
 
         srcCode {

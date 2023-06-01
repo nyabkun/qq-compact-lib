@@ -17,24 +17,24 @@ import nyab.conf.QE
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
-// CallChain[size=7] = String.qEscapeString() <-[Call]- String.qQuoteArg() <-[Call]- List<String>.qJ ... <String>.runCmd() <-[Call]- QGit.gh_release_create() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=6] = String.qEscapeString() <-[Call]- String.qQuoteArg() <-[Call]- List<String>.qJ ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal fun String.qEscapeString(vararg withEscapeToWithoutEscape: Pair<String, String>): String {
     return QStringEscape(*withEscapeToWithoutEscape).escape(this)
 }
 
-// CallChain[size=8] = String.qUnescapeString() <-[Call]- String.qUnquoteArg() <-[Call]- String.qIsS ... <String>.runCmd() <-[Call]- QGit.gh_release_create() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=7] = String.qUnescapeString() <-[Call]- String.qUnquoteArg() <-[Call]- String.qIsS ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal fun String.qUnescapeString(vararg withEscapeToWithoutEscape: Pair<String, String>): String {
     return QStringEscape(*withEscapeToWithoutEscape).unescape(this)
 }
 
-// CallChain[size=8] = QStringEscape <-[Call]- String.qEscapeString() <-[Call]- String.qQuoteArg() < ... <String>.runCmd() <-[Call]- QGit.gh_release_create() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=7] = QStringEscape <-[Call]- String.qEscapeString() <-[Call]- String.qQuoteArg() < ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
 internal class QStringEscape(vararg withEscapeToWithoutEscape: Pair<String, String>) {
-    // CallChain[size=10] = QStringEscape.commonEscapeChar <-[Call]- QStringEscape.init { <-[Propag]- QS ... <String>.runCmd() <-[Call]- QGit.gh_release_create() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=9] = QStringEscape.commonEscapeChar <-[Call]- QStringEscape.init { <-[Propag]- QSt ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     private val commonEscapeChar: Char?
-    // CallChain[size=9] = QStringEscape.mapWithEscapeToWithoutEscape <-[Call]- QStringEscape.escape() < ... <String>.runCmd() <-[Call]- QGit.gh_release_create() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=8] = QStringEscape.mapWithEscapeToWithoutEscape <-[Call]- QStringEscape.escape() < ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     private val mapWithEscapeToWithoutEscape: MutableMap<CharArray, CharArray> = mutableMapOf()
 
-    // CallChain[size=9] = QStringEscape.init { <-[Propag]- QStringEscape.escape() <-[Call]- String.qEsc ... <String>.runCmd() <-[Call]- QGit.gh_release_create() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=8] = QStringEscape.init { <-[Propag]- QStringEscape.escape() <-[Call]- String.qEsc ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     init {
         for ((withEscape, withoutEscape) in withEscapeToWithoutEscape) {
             mapWithEscapeToWithoutEscape += withEscape.toCharArray() to withoutEscape.toCharArray()
@@ -48,7 +48,7 @@ internal class QStringEscape(vararg withEscapeToWithoutEscape: Pair<String, Stri
         }
     }
 
-    // CallChain[size=8] = QStringEscape.escape() <-[Call]- String.qEscapeString() <-[Call]- String.qQuo ... <String>.runCmd() <-[Call]- QGit.gh_release_create() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=7] = QStringEscape.escape() <-[Call]- String.qEscapeString() <-[Call]- String.qQuo ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     fun escape(text: String): String {
         val reader = QSequenceReader(text)
         val sb = StringBuilder()
@@ -73,7 +73,7 @@ internal class QStringEscape(vararg withEscapeToWithoutEscape: Pair<String, Stri
         return sb.toString()
     }
 
-    // CallChain[size=9] = QStringEscape.unescape() <-[Call]- String.qUnescapeString() <-[Call]- String. ... <String>.runCmd() <-[Call]- QGit.gh_release_create() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=8] = QStringEscape.unescape() <-[Call]- String.qUnescapeString() <-[Call]- String. ... ring>.qRunInShell() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     fun unescape(text: String): String {
         val reader = QSequenceReader(text)
         val sb = StringBuilder()

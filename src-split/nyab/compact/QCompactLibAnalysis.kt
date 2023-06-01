@@ -15,12 +15,10 @@ import java.nio.file.Path
 import kotlin.io.path.pathString
 import nyab.build.qCurClassPathJarLibraries
 import nyab.conf.qJAVA_HOME
-import nyab.util.blue
 import nyab.util.file
 import nyab.util.path
 import nyab.util.qList
 import nyab.util.qLog
-import nyab.util.qTimeIt
 import nyab.util.sep
 import org.jetbrains.kotlin.analyzer.AnalysisResult
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
@@ -240,9 +238,7 @@ class QCompactLibAnalysis(val analysisCtx: QAnalysisContext, val lib: QCompactLi
     val analysisResult: AnalysisResult by lazy {
         analysisCtx.phase.nextPhase(QAnalysisPhase.CompilerAnalysisStarted)
 
-        qTimeIt("Analyse Codebase : ${if (analysisCtx.isTest) lib.destTestSrcFileName else lib.destMainSrcFileName}".blue) {
-            lazyTopDownAnalyzer.analyzeDeclarations(TopDownAnalysisMode.TopLevelDeclarations, ktFiles)
-        }
+        lazyTopDownAnalyzer.analyzeDeclarations(TopDownAnalysisMode.TopLevelDeclarations, ktFiles)
 
         componentProvider.get<JavaClassesTracker>().onCompletedAnalysis(moduleDescriptor)
 

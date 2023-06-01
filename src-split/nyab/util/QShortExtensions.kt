@@ -20,22 +20,30 @@ import nyab.conf.QMyPath
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
-// CallChain[size=11] = base <-[Call]- Path.qAppendBaseName() <-[Call]- Path.qWithDateTime() <-[Call ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=11] = Path.base <-[Call]- Path.qAppendBaseName() <-[Call]- Path.qWithDateTime() <- ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal val Path.base: String
     get() = nameWithoutExtension
 
-// CallChain[size=8] = slash <-[Call]- QBackupFile.createBackup() <-[Call]- QBackupHelper.fillSlots( ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=2] = Path.slash <-[Call]- QTopLevelCompactElement.markDownSrcCodeLink()[Root]
 internal val Path.slash: String
     get() = this.toString().replace('\\', '/')
 
-// CallChain[size=8] = path <-[Call]- QMyPath.src_root <-[Call]- qLogStackFrames() <-[Call]- QExcept ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=8] = String.path <-[Call]- QMyPath.src_root <-[Call]- qLogStackFrames() <-[Call]-  ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal val String.path: Path
     get() = Paths.get(this.trim()).toAbsolutePath().normalize()
 
-// CallChain[size=2] = file <-[Call]- QCompactLibAnalysis.compilerConfiguration[Root]
+// CallChain[size=2] = String.pathRelative <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal val String.pathRelative: Path
+    get() = Paths.get(this.trim()).normalize()
+
+// CallChain[size=6] = String.pathTmp <-[Call]- String.qRunShellScript() <-[Call]- qRunMethodInNewJV ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal val String.pathTmp: Path
+    get() = path(baseDir = QMyPath.temp)
+
+// CallChain[size=2] = String.file <-[Call]- QCompactLibAnalysis.compilerConfiguration[Root]
 internal val String.file: File
     get() = File(this.trim()).normalize().absoluteFile
 
-// CallChain[size=9] = norm <-[Call]- Path.qCopyFileTo() <-[Call]- QBackupFile.createBackup() <-[Cal ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=9] = Path.norm <-[Call]- Path.qCopyFileTo() <-[Call]- QBackupFile.createBackup() < ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal val Path.norm: Path
     get() = toAbsolutePath().normalize()

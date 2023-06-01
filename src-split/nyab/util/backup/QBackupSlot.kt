@@ -19,50 +19,50 @@ import nyab.util.qYEAR
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
-// CallChain[size=8] = QFileInBackupSlot <-[Ref]- QBackupHelper.filesInSlot <-[Call]- QBackupHelper. ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=8] = QFileInBackupSlot <-[Ref]- QBackupHelper.filesInSlot <-[Call]- QBackupHelper. ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal class QFileInBackupSlot(val slot: QBackupSlot) {
-    // CallChain[size=7] = QFileInBackupSlot.backupFile <-[Call]- QBackupHelper.fillSlots() <-[Call]- QB ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=7] = QFileInBackupSlot.backupFile <-[Call]- QBackupHelper.fillSlots() <-[Call]- QB ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     var backupFile: QBackupFile? = null
 
-    // CallChain[size=7] = QFileInBackupSlot.isEmpty <-[Call]- QBackupHelper.fillSlots() <-[Call]- QBack ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=7] = QFileInBackupSlot.isEmpty <-[Call]- QBackupHelper.fillSlots() <-[Call]- QBack ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     val isEmpty: Boolean
         get() = backupFile == null
 }
 
-// CallChain[size=5] = QBackupSlot <-[Ref]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=5] = QBackupSlot <-[Ref]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal class QBackupSlot private constructor(val periodMilli: Long, val availableOnlyIfPeriodElapsed: Boolean) {
     companion object {
-        // CallChain[size=8] = QBackupSlot.oldest() <-[Call]- QBackupHelper.filesInSlot <-[Call]- QBackupHel ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+        // CallChain[size=8] = QBackupSlot.oldest() <-[Call]- QBackupHelper.filesInSlot <-[Call]- QBackupHel ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
         fun oldest(): QBackupSlot {
             return QBackupSlot(Long.MAX_VALUE, false)
         }
 
-        // CallChain[size=6] = QBackupSlot.hour() <-[Call]- QBackupSlot.DEFAULT_SLOTS <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+        // CallChain[size=6] = QBackupSlot.hour() <-[Call]- QBackupSlot.DEFAULT_SLOTS <-[Call]- Path.qTryBac ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
         fun hour(hour: Int, availableOnlyIfPeriodElapsed: Boolean = false): QBackupSlot {
             return QBackupSlot(hour * qHOUR, availableOnlyIfPeriodElapsed)
         }
 
-        // CallChain[size=6] = QBackupSlot.day() <-[Call]- QBackupSlot.DEFAULT_SLOTS <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+        // CallChain[size=6] = QBackupSlot.day() <-[Call]- QBackupSlot.DEFAULT_SLOTS <-[Call]- Path.qTryBack ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
         fun day(day: Int, availableOnlyIfPeriodElapsed: Boolean = false): QBackupSlot {
             return QBackupSlot(day * qDAY, availableOnlyIfPeriodElapsed)
         }
 
-        // CallChain[size=6] = QBackupSlot.week() <-[Call]- QBackupSlot.DEFAULT_SLOTS <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+        // CallChain[size=6] = QBackupSlot.week() <-[Call]- QBackupSlot.DEFAULT_SLOTS <-[Call]- Path.qTryBac ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
         fun week(week: Int, availableOnlyIfPeriodElapsed: Boolean = true): QBackupSlot {
             return QBackupSlot(week * qWEEK, availableOnlyIfPeriodElapsed)
         }
 
-        // CallChain[size=6] = QBackupSlot.month() <-[Call]- QBackupSlot.DEFAULT_SLOTS <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+        // CallChain[size=6] = QBackupSlot.month() <-[Call]- QBackupSlot.DEFAULT_SLOTS <-[Call]- Path.qTryBa ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
         fun month(month: Int, availableOnlyIfPeriodElapsed: Boolean = true): QBackupSlot {
             return QBackupSlot(month * qMONTH, availableOnlyIfPeriodElapsed)
         }
 
-        // CallChain[size=6] = QBackupSlot.year() <-[Call]- QBackupSlot.DEFAULT_SLOTS <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+        // CallChain[size=6] = QBackupSlot.year() <-[Call]- QBackupSlot.DEFAULT_SLOTS <-[Call]- Path.qTryBac ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
         fun year(year: Int, availableOnlyIfPeriodElapsed: Boolean = true): QBackupSlot {
             return QBackupSlot(year * qYEAR, availableOnlyIfPeriodElapsed)
         }
 
-        // CallChain[size=5] = QBackupSlot.DEFAULT_SLOTS <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+        // CallChain[size=5] = QBackupSlot.DEFAULT_SLOTS <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
         val DEFAULT_SLOTS: Array<QBackupSlot> by lazy {
             arrayOf(
                     hour(1),

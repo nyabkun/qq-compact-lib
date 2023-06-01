@@ -14,6 +14,7 @@ package nyab.util
 
 import com.sun.nio.file.ExtendedCopyOption
 import com.sun.nio.file.ExtendedOpenOption
+import java.awt.Desktop
 import java.awt.Dimension
 import java.io.BufferedInputStream
 import java.io.IOException
@@ -38,16 +39,19 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.security.DigestOutputStream
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
+import java.text.DecimalFormat
 import java.util.*
 import javax.imageio.ImageIO
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.appendText
 import kotlin.io.path.bufferedReader
+import kotlin.io.path.createDirectories
 import kotlin.io.path.createDirectory
 import kotlin.io.path.createFile
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
 import kotlin.io.path.extension
+import kotlin.io.path.fileSize
 import kotlin.io.path.forEachDirectoryEntry
 import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile
@@ -58,10 +62,16 @@ import kotlin.io.path.notExists
 import kotlin.io.path.pathString
 import kotlin.io.path.readText
 import kotlin.io.path.reader
+import kotlin.io.path.useLines
 import kotlin.io.path.writeText
+import kotlin.math.log10
 import kotlin.math.max
+import kotlin.math.pow
 import kotlin.streams.asSequence
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import nyab.conf.QE
+import nyab.conf.QMyEditor
 import nyab.conf.QMyPath
 import nyab.match.QM
 import nyab.match.qMatches
@@ -73,7 +83,7 @@ import nyab.util.backup.qTryBackup
 // CallChain[size=11] = qBUFFER_SIZE <-[Call]- Path.qReader() <-[Call]- Path.qFetchLinesAround() <-[ ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal const val qBUFFER_SIZE = DEFAULT_BUFFER_SIZE
 
-// CallChain[size=10] = qFILE_LIST_RECURSIVE_MAX_DEPTH <-[Call]- Path.qListRecursive() <-[Call]- Pat ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=10] = qFILE_LIST_RECURSIVE_MAX_DEPTH <-[Call]- Path.qListRecursive() <-[Call]- Pat ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 private const val qFILE_LIST_RECURSIVE_MAX_DEPTH: Int = 1000
 
 // CallChain[size=11] = QOpenOpt <-[Ref]- Path.qReader() <-[Call]- Path.qFetchLinesAround() <-[Call] ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
@@ -111,12 +121,12 @@ internal enum class QOpenOpt(val opt: OpenOption) : QFlagEnum<QOpenOpt> {
     LN_NOFOLLOW_LINKS(LinkOption.NOFOLLOW_LINKS);
 
     companion object {
-        // CallChain[size=10] = QOpenOpt.DEFAULT <-[Call]- Path.qOutputStream() <-[Call]- Path.qCreateZip()  ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+        // CallChain[size=10] = QOpenOpt.DEFAULT <-[Call]- Path.qOutputStream() <-[Call]- Path.qCreateZip()  ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
         val DEFAULT = CREATE + TRUNCATE_EXISTING + WRITE
     }
 }
 
-// CallChain[size=6] = Path.sep() <-[Call]- QMyPath.backup <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=6] = Path.sep() <-[Call]- QMyPath.backup <-[Call]- Path.qTryBackup() <-[Call]- Pat ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal infix fun Path.sep(childPath: String): Path = Paths.get(toString(), childPath)
 
 // CallChain[size=11] = QFlag<QOpenOpt>.toOptEnums() <-[Call]- Path.qReader() <-[Call]- Path.qFetchL ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
@@ -124,30 +134,30 @@ internal fun QFlag<QOpenOpt>.toOptEnums(): Array<OpenOption> {
     return toEnumValues().map { it.opt }.toTypedArray()
 }
 
-// CallChain[size=9] = QCopyOpt <-[Ref]- Path.qCopyFileTo() <-[Call]- QBackupFile.createBackup() <-[ ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=9] = QCopyOpt <-[Ref]- Path.qCopyFileTo() <-[Call]- QBackupFile.createBackup() <-[ ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal enum class QCopyOpt(val opt: CopyOption) : QFlagEnum<QCopyOpt> {
-    // CallChain[size=9] = QCopyOpt.REPLACE_EXISTING <-[Call]- Path.qCopyFileTo() <-[Call]- QBackupFile. ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=9] = QCopyOpt.REPLACE_EXISTING <-[Call]- Path.qCopyFileTo() <-[Call]- QBackupFile. ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     REPLACE_EXISTING(StandardCopyOption.REPLACE_EXISTING),
-    // CallChain[size=10] = QCopyOpt.COPY_ATTRIBUTES <-[Propag]- QCopyOpt.REPLACE_EXISTING <-[Call]- Pat ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=10] = QCopyOpt.COPY_ATTRIBUTES <-[Propag]- QCopyOpt.REPLACE_EXISTING <-[Call]- Pat ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     COPY_ATTRIBUTES(StandardCopyOption.COPY_ATTRIBUTES),
-    // CallChain[size=10] = QCopyOpt.ATOMIC_MOVE <-[Propag]- QCopyOpt.REPLACE_EXISTING <-[Call]- Path.qC ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=10] = QCopyOpt.ATOMIC_MOVE <-[Propag]- QCopyOpt.REPLACE_EXISTING <-[Call]- Path.qC ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     ATOMIC_MOVE(
         StandardCopyOption.ATOMIC_MOVE
     ),
-    // CallChain[size=10] = QCopyOpt.EX_INTERRUPTIBLE <-[Propag]- QCopyOpt.REPLACE_EXISTING <-[Call]- Pa ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=10] = QCopyOpt.EX_INTERRUPTIBLE <-[Propag]- QCopyOpt.REPLACE_EXISTING <-[Call]- Pa ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     EX_INTERRUPTIBLE(ExtendedCopyOption.INTERRUPTIBLE),
-    // CallChain[size=10] = QCopyOpt.LN_NOFOLLOW_LINKS <-[Propag]- QCopyOpt.REPLACE_EXISTING <-[Call]- P ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=10] = QCopyOpt.LN_NOFOLLOW_LINKS <-[Propag]- QCopyOpt.REPLACE_EXISTING <-[Call]- P ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     LN_NOFOLLOW_LINKS(LinkOption.NOFOLLOW_LINKS);
 
     
 }
 
-// CallChain[size=9] = QFlag<QCopyOpt>.toOptEnums() <-[Call]- Path.qCopyFileTo() <-[Call]- QBackupFi ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=9] = QFlag<QCopyOpt>.toOptEnums() <-[Call]- Path.qCopyFileTo() <-[Call]- QBackupFi ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun QFlag<QCopyOpt>.toOptEnums(): Array<CopyOption> {
     return toEnumValues().map { it.opt }.toTypedArray()
 }
 
-// CallChain[size=8] = Path.qDateTime() <-[Call]- QBackupFile.backupDate <-[Call]- QBackupHelper.fil ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=8] = Path.qDateTime() <-[Call]- QBackupFile.backupDate <-[Call]- QBackupHelper.fil ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qDateTime(): Long = qCacheItOneSec(name) {
     name.qParseDateTime()
 }
@@ -163,19 +173,32 @@ internal fun Path.qReadFile(charset: Charset = Charsets.UTF_8, useCache: Boolean
     }
 }
 
-// CallChain[size=9] = Path.qOutputStream() <-[Call]- Path.qCreateZip() <-[Call]- QBackupFile.create ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=7] = String.path() <-[Call]- String.pathTmp <-[Call]- String.qRunShellScript() <-[ ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+/**
+ * Create [Path] with a [pathString] relative to [baseDir]
+ */
+internal fun String.path(baseDir: Path = QMyPath.root): Path {
+    val path = Paths.get(this)
+
+    if (path.isAbsolute) QE.ShouldBeRelativePath.throwItFile(path)
+
+    // if path is absolute, resolve method just returns path itself
+    return baseDir.resolve(path).norm
+}
+
+// CallChain[size=9] = Path.qOutputStream() <-[Call]- Path.qCreateZip() <-[Call]- QBackupFile.create ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qOutputStream(opts: QFlag<QOpenOpt> = QOpenOpt.DEFAULT): OutputStream {
     return Files.newOutputStream(this, *opts.toOptEnums())
 }
 
-// CallChain[size=2] = Path.qDeleteDirContents() <-[Call]- QCompactLib.clearExistingSrcFiles()[Root]
+// CallChain[size=5] = Path.qDeleteDirContents() <-[Call]- Path.qForceDelete() <-[Call]- QGit.gitHub ... eDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
 internal fun Path.qDeleteDirContents(maxDepth: Int = Int.MAX_VALUE, throwException: Boolean = false) {
     if (this.exists() && this.isDirectory()) {
         this.qSeq(QFType.Any, maxDepth = maxDepth).forEach {
             try {
                 it.qForceDelete() // TODO remove recursive call
             } catch (e: Exception) {
-                if( throwException )
+                if (throwException)
                     throw e
             }
         }
@@ -184,7 +207,7 @@ internal fun Path.qDeleteDirContents(maxDepth: Int = Int.MAX_VALUE, throwExcepti
     }
 }
 
-// CallChain[size=3] = Path.qForceDelete() <-[Call]- Path.qDeleteDirContents() <-[Call]- QCompactLib.clearExistingSrcFiles()[Root]
+// CallChain[size=4] = Path.qForceDelete() <-[Call]- QGit.gitHubDownloadSingleDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
 internal fun Path.qForceDelete() {
     if (this.isDirectory()) {
         this.qDeleteDirContents()
@@ -194,11 +217,11 @@ internal fun Path.qForceDelete() {
     }
 }
 
-// CallChain[size=5] = Sequence<*>.qIsEmpty() <-[Call]- Path.qDeleteDirIfEmpty() <-[Call]- Path.qForceDelete() <-[Call]- Path.qDeleteDirContents() <-[Call]- QCompactLib.clearExistingSrcFiles()[Root]
+// CallChain[size=6] = Sequence<*>.qIsEmpty() <-[Call]- Path.qDeleteDirIfEmpty() <-[Call]- Path.qFor ... eDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
 internal fun Sequence<*>.qIsEmpty(): Boolean =
     count() == 0
 
-// CallChain[size=4] = Path.qDeleteDirIfEmpty() <-[Call]- Path.qForceDelete() <-[Call]- Path.qDeleteDirContents() <-[Call]- QCompactLib.clearExistingSrcFiles()[Root]
+// CallChain[size=5] = Path.qDeleteDirIfEmpty() <-[Call]- Path.qForceDelete() <-[Call]- QGit.gitHubD ... eDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
 internal fun Path.qDeleteDirIfEmpty(): Boolean {
     if (!this.isDirectory()) {
         return false
@@ -216,7 +239,86 @@ internal fun Path.qDeleteDirIfEmpty(): Boolean {
     }
 }
 
-// CallChain[size=4] = Path.qIfExistsRetryPath() <-[Call]- Path.qCreateFile() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=4] = Path.qMoveDirTo() <-[Call]- QGit.gitHubDownloadSingleDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+// TODO with progress
+internal fun Path.qMoveDirTo(
+    destDir: Path,
+    ifExistsContentFile: QIfExistsCopyFile = QIfExistsCopyFile.Overwrite,
+    ifExistsDestDir: QIfExistsCopyDir = QIfExistsCopyDir.DoNothing,
+    atomic: Boolean = true,
+): Path {
+    if (this.qIsSubDirOrFileOf(destDir) || destDir.qIsSubDirOrFileOf(this))
+        QE.ShouldNotBeSubDirectory.throwItBrackets("Src", this, "Dest", destDir)
+
+    if (!this.exists()) QE.DirectoryNotFound.throwItFile(this)
+
+    var finalDestDir = destDir
+
+    if (destDir.exists()) {
+        when (ifExistsDestDir) {
+            QIfExistsCopyDir.DoNothing -> {
+                return destDir
+            }
+
+            QIfExistsCopyDir.Merge -> {
+            }
+
+            QIfExistsCopyDir.ChangeFileNameAndRetry -> {
+                finalDestDir = this.qIfExistsRetryPath()
+            }
+
+            QIfExistsCopyDir.Overwrite -> {
+                destDir.qForceDelete()
+                destDir.createDirectories()
+            }
+
+            QIfExistsCopyDir.OverwriteIfDifferentHash -> {
+                if (this.qHash() != destDir.qHash()) {
+                    destDir.qForceDelete()
+                    destDir.createDirectories()
+                } else {
+                    return destDir
+                }
+            }
+
+            QIfExistsCopyDir.RaiseException -> {
+                QE.DirectoryAlreadyExists.throwItDir(this)
+            }
+        }
+
+        val opt = EnumSet.noneOf(FileVisitOption::class.java)
+
+        Files.walkFileTree(
+            this, opt, Int.MAX_VALUE,
+            object : SimpleFileVisitor<Path>() {
+                override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult {
+                    Files.createDirectories(finalDestDir.resolve(this@qMoveDirTo.relativize(dir)))
+
+                    return FileVisitResult.CONTINUE
+                }
+
+                override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
+                    if (file.isDirectory())
+                        return FileVisitResult.CONTINUE
+
+                    val destFile = finalDestDir.resolve(this@qMoveDirTo.relativize(file))
+
+                    file.qMoveFileTo(destFile, ifExistsContentFile, atomic)
+
+                    return FileVisitResult.CONTINUE
+                }
+            }
+        )
+
+        this.qForceDelete()
+
+        return finalDestDir
+    }
+
+    return this.qMoveFileTo(finalDestDir, ifExistsContentFile, atomic)
+}
+
+// CallChain[size=9] = Path.qIfExistsRetryPath() <-[Call]- Path.qCopyFileTo() <-[Call]- QBackupFile. ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qIfExistsRetryPath(retryNum: Int = 3): Path {
     val now = System.currentTimeMillis()
 
@@ -232,10 +334,10 @@ internal fun Path.qIfExistsRetryPath(retryNum: Int = 3): Path {
     QE.FileAlreadyExists.throwItFile(this)
 }
 
-// CallChain[size=8] = Path.qCopyFileTo() <-[Call]- QBackupFile.createBackup() <-[Call]- QBackupHelp ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=8] = Path.qCopyFileTo() <-[Call]- QBackupFile.createBackup() <-[Call]- QBackupHelp ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qCopyFileTo(
     destFile: Path = Paths.get("$name.copy"),
-    ifExists: QIfExistsCopy = QIfExistsCopy.ChangeFileNameAndRetry,
+    ifExists: QIfExistsCopyFile = QIfExistsCopyFile.ChangeFileNameAndRetry,
 ): Path {
     if (!this.exists()) QE.FileNotFound.throwItFile(this)
 
@@ -245,7 +347,7 @@ internal fun Path.qCopyFileTo(
 
     if (destFile.exists()) {
         when (ifExists) {
-            QIfExistsCopy.ChangeFileNameAndRetry -> {
+            QIfExistsCopyFile.ChangeFileNameAndRetry -> {
                 val retryPath = this.qIfExistsRetryPath()
 
                 return try {
@@ -255,12 +357,12 @@ internal fun Path.qCopyFileTo(
                 }
             }
 
-            QIfExistsCopy.Overwrite -> {
+            QIfExistsCopyFile.Overwrite -> {
                 options += QCopyOpt.REPLACE_EXISTING
                 return Files.copy(this, destFile, *options.toOptEnums()).norm
             }
 
-            QIfExistsCopy.OverwriteIfDifferentHash -> {
+            QIfExistsCopyFile.OverwriteIfDifferentHash -> {
                 return if (this.qHash() != destFile.qHash()) {
                     options += QCopyOpt.REPLACE_EXISTING
                     Files.copy(this, destFile, *options.toOptEnums()).norm
@@ -269,11 +371,11 @@ internal fun Path.qCopyFileTo(
                 }
             }
 
-            QIfExistsCopy.RaiseException -> {
+            QIfExistsCopyFile.RaiseException -> {
                 QE.FileAlreadyExists.throwItFile(this)
             }
 
-            QIfExistsCopy.DoNothing -> {
+            QIfExistsCopyFile.DoNothing -> {
                 return destFile
             }
         }
@@ -282,22 +384,22 @@ internal fun Path.qCopyFileTo(
     return Files.copy(this, destFile, *options.toOptEnums()).norm
 }
 
-// CallChain[size=10] = Path.qAppendBaseName() <-[Call]- Path.qWithDateTime() <-[Call]- QBackupHelpe ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=10] = Path.qAppendBaseName() <-[Call]- Path.qWithDateTime() <-[Call]- QBackupHelpe ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qAppendBaseName(nameSuffix: String): Path {
     return qWithNewBaseName(base + nameSuffix)
 }
 
-// CallChain[size=9] = Path.qWithDateTime() <-[Call]- QBackupHelper.backupPath() <-[Call]- QBackupHe ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=9] = Path.qWithDateTime() <-[Call]- QBackupHelper.backupPath() <-[Call]- QBackupHe ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qWithDateTime(prefix: String = "TIME", time: Long = System.currentTimeMillis()): Path {
     return qAppendBaseName(".$prefix=${time.qFormatDateTime()}")
 }
 
-// CallChain[size=5] = Path.qWithNewBaseName() <-[Call]- Path.qIfExistsRetryPath() <-[Call]- Path.qCreateFile() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=10] = Path.qWithNewBaseName() <-[Call]- Path.qIfExistsRetryPath() <-[Call]- Path.q ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qWithNewBaseName(baseName: String): Path {
     return resolveSibling(Paths.get(qNewBaseNameStr(baseName)))
 }
 
-// CallChain[size=6] = Path.qNewBaseNameStr() <-[Call]- Path.qWithNewBaseName() <-[Call]- Path.qIfEx ... ) <-[Call]- Path.qCreateFile() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=11] = Path.qNewBaseNameStr() <-[Call]- Path.qWithNewBaseName() <-[Call]- Path.qIfE ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qNewBaseNameStr(nameWithoutExtension: String): String {
     return if (this.extension.isEmpty()) {
         nameWithoutExtension
@@ -306,7 +408,7 @@ internal fun Path.qNewBaseNameStr(nameWithoutExtension: String): String {
     }
 }
 
-// CallChain[size=6] = Path.qBaseDir() <-[Call]- Path.qWithBaseDir() <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=6] = Path.qBaseDir() <-[Call]- Path.qWithBaseDir() <-[Call]- Path.qTryBackup() <-[ ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qBaseDir(
     baseDirsToSearch: List<Path> = QMyPath.base,
 ): Path? {
@@ -323,7 +425,7 @@ internal fun Path.qBaseDir(
     }
 }
 
-// CallChain[size=7] = qFindNearestBaseDir() <-[Call]- Path.qBaseDir() <-[Call]- Path.qWithBaseDir() ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=7] = qFindNearestBaseDir() <-[Call]- Path.qBaseDir() <-[Call]- Path.qWithBaseDir() ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 private fun qFindNearestBaseDir(dirs: List<Path>): Path = qCacheItOneSec(dirs.toString()) {
     val sorted = dirs.sortedWith { aDir, bDir ->
         when {
@@ -336,12 +438,12 @@ private fun qFindNearestBaseDir(dirs: List<Path>): Path = qCacheItOneSec(dirs.to
     sorted[0]
 }
 
-// CallChain[size=7] = Path.qIsSubDirOrFileOf() <-[Call]- Path.qBaseDir() <-[Call]- Path.qWithBaseDi ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=7] = Path.qIsSubDirOrFileOf() <-[Call]- Path.qBaseDir() <-[Call]- Path.qWithBaseDi ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qIsSubDirOrFileOf(baseDir: Path): Boolean {
     var pa: Path? = this.toAbsolutePath().normalize().parent
     val base = baseDir.toAbsolutePath().normalize()
     while (pa != null) {
-        if (pa == baseDir) {
+        if (pa == base) {
             return true
         }
         pa = pa.parent
@@ -350,12 +452,12 @@ internal fun Path.qIsSubDirOrFileOf(baseDir: Path): Boolean {
     return false
 }
 
-// CallChain[size=9] = Path.qChangeParentDir() <-[Call]- QBackupHelper.backupPath() <-[Call]- QBacku ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=9] = Path.qChangeParentDir() <-[Call]- QBackupHelper.backupPath() <-[Call]- QBacku ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qChangeParentDir(newParentDir: Path): Path {
     return newParentDir.resolve(Paths.get(this.name)).norm
 }
 
-// CallChain[size=6] = Path.qToRelativePath() <-[Call]- Path.qWithBaseDir() <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=6] = Path.qToRelativePath() <-[Call]- Path.qWithBaseDir() <-[Call]- Path.qTryBacku ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 private fun Path.qToRelativePath(): Path {
     var newPathString = if (this.pathString.contains(":")) {
         this.pathString.replace(':', '_')
@@ -372,7 +474,7 @@ private fun Path.qToRelativePath(): Path {
     return newPath
 }
 
-// CallChain[size=5] = Path.qWithBaseDir() <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=5] = Path.qWithBaseDir() <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qWithBaseDir(newBaseDir: Path? = QMyPath.temp): Path {
     if (newBaseDir == null) {
         return this
@@ -388,42 +490,58 @@ internal fun Path.qWithBaseDir(newBaseDir: Path? = QMyPath.temp): Path {
     }
 }
 
-// CallChain[size=3] = QIfExistsCreate <-[Ref]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=9] = QIfExistsCreate <-[Ref]- Path.qCreateZip() <-[Call]- QBackupFile.createBackup ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal enum class QIfExistsCreate {
-    // CallChain[size=3] = QIfExistsCreate.DoNothing <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=9] = QIfExistsCreate.DoNothing <-[Call]- Path.qCreateZip() <-[Call]- QBackupFile.c ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     DoNothing,
-    // CallChain[size=4] = QIfExistsCreate.ChangeFileNameAndRetry <-[Propag]- QIfExistsCreate.DoNothing <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=9] = QIfExistsCreate.ChangeFileNameAndRetry <-[Call]- Path.qCreateZip() <-[Call]-  ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     ChangeFileNameAndRetry,
-    // CallChain[size=4] = QIfExistsCreate.DeleteAndCreateFile <-[Propag]- QIfExistsCreate.DoNothing <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=9] = QIfExistsCreate.DeleteAndCreateFile <-[Call]- Path.qCreateZip() <-[Call]- QBa ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     DeleteAndCreateFile,
-    // CallChain[size=4] = QIfExistsCreate.RaiseException <-[Propag]- QIfExistsCreate.DoNothing <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=9] = QIfExistsCreate.RaiseException <-[Call]- Path.qCreateZip() <-[Call]- QBackupF ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     RaiseException
 }
 
-// CallChain[size=8] = QIfExistsCreateDir <-[Ref]- QBackupHelper.listBackupFilesExisting() <-[Call]- ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=8] = QIfExistsCreateDir <-[Ref]- QBackupHelper.listBackupFilesExisting() <-[Call]- ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal enum class QIfExistsCreateDir {
-    // CallChain[size=8] = QIfExistsCreateDir.DoNothing <-[Call]- QBackupHelper.listBackupFilesExisting( ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=8] = QIfExistsCreateDir.DoNothing <-[Call]- QBackupHelper.listBackupFilesExisting( ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     DoNothing,
-    // CallChain[size=9] = QIfExistsCreateDir.ChangeDirNameAndRetry <-[Propag]- QIfExistsCreateDir.DoNot ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=9] = QIfExistsCreateDir.ChangeDirNameAndRetry <-[Propag]- QIfExistsCreateDir.DoNot ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     ChangeDirNameAndRetry,
-    // CallChain[size=9] = QIfExistsCreateDir.DeleteContents <-[Propag]- QIfExistsCreateDir.DoNothing <- ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=9] = QIfExistsCreateDir.DeleteContents <-[Propag]- QIfExistsCreateDir.DoNothing <- ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     DeleteContents,
-    // CallChain[size=9] = QIfExistsCreateDir.RaiseException <-[Propag]- QIfExistsCreateDir.DoNothing <- ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=9] = QIfExistsCreateDir.RaiseException <-[Propag]- QIfExistsCreateDir.DoNothing <- ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     RaiseException
 }
 
-// CallChain[size=4] = QIfExistsCopy <-[Ref]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
-internal enum class QIfExistsCopy {
-    // CallChain[size=9] = QIfExistsCopy.DoNothing <-[Call]- Path.qCopyFileTo() <-[Call]- QBackupFile.cr ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=4] = QIfExistsCopyFile <-[Ref]- Path.qWrite() <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
+internal enum class QIfExistsCopyFile {
+    // CallChain[size=9] = QIfExistsCopyFile.DoNothing <-[Call]- Path.qCopyFileTo() <-[Call]- QBackupFil ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     DoNothing,
-    // CallChain[size=9] = QIfExistsCopy.ChangeFileNameAndRetry <-[Call]- Path.qCopyFileTo() <-[Call]- Q ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=9] = QIfExistsCopyFile.ChangeFileNameAndRetry <-[Call]- Path.qCopyFileTo() <-[Call ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     ChangeFileNameAndRetry,
-    // CallChain[size=4] = QIfExistsCopy.Overwrite <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=4] = QIfExistsCopyFile.Overwrite <-[Call]- Path.qWrite() <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     Overwrite,
-    // CallChain[size=9] = QIfExistsCopy.OverwriteIfDifferentHash <-[Call]- Path.qCopyFileTo() <-[Call]- ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=9] = QIfExistsCopyFile.OverwriteIfDifferentHash <-[Call]- Path.qCopyFileTo() <-[Ca ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     OverwriteIfDifferentHash,
-    // CallChain[size=9] = QIfExistsCopy.RaiseException <-[Call]- Path.qCopyFileTo() <-[Call]- QBackupFi ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=9] = QIfExistsCopyFile.RaiseException <-[Call]- Path.qCopyFileTo() <-[Call]- QBack ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     RaiseException
+}
+
+// CallChain[size=4] = QIfExistsCopyDir <-[Ref]- QGit.gitHubDownloadSingleDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal enum class QIfExistsCopyDir {
+    // CallChain[size=5] = QIfExistsCopyDir.DoNothing <-[Call]- Path.qMoveDirTo() <-[Call]- QGit.gitHubD ... eDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+    DoNothing,
+    // CallChain[size=5] = QIfExistsCopyDir.ChangeFileNameAndRetry <-[Call]- Path.qMoveDirTo() <-[Call]- ... eDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+    ChangeFileNameAndRetry,
+    // CallChain[size=4] = QIfExistsCopyDir.Overwrite <-[Call]- QGit.gitHubDownloadSingleDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+    Overwrite,
+    // CallChain[size=5] = QIfExistsCopyDir.OverwriteIfDifferentHash <-[Call]- Path.qMoveDirTo() <-[Call ... eDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+    OverwriteIfDifferentHash,
+    // CallChain[size=5] = QIfExistsCopyDir.RaiseException <-[Call]- Path.qMoveDirTo() <-[Call]- QGit.gi ... eDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+    RaiseException,
+    // CallChain[size=5] = QIfExistsCopyDir.Merge <-[Call]- Path.qMoveDirTo() <-[Call]- QGit.gitHubDownl ... eDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+    Merge
 }
 
 // CallChain[size=2] = QIfExistsWrite <-[Ref]- QCompactLibIfFileExists[Root]
@@ -444,19 +562,19 @@ enum class QIfExistsWrite {
     RaiseException
 }
 
-// CallChain[size=4] = Path.qCreateTempFile() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=4] = Path.qCreateTempFile() <-[Call]- Path.qWrite() <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qCreateTempFile(ifExists: QIfExistsCreate = QIfExistsCreate.DeleteAndCreateFile): Path {
     val tempPath = this.qWithBaseDir(QMyPath.temp)
     return tempPath.qCreateFile(ifExists)
 }
 
-// CallChain[size=4] = Path.qCreateTempFileAndCopyContent() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
-internal fun Path.qCreateTempFileAndCopyContent(ifExists: QIfExistsCopy = QIfExistsCopy.Overwrite): Path {
+// CallChain[size=4] = Path.qCreateTempFileAndCopyContent() <-[Call]- Path.qWrite() <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
+internal fun Path.qCreateTempFileAndCopyContent(ifExists: QIfExistsCopyFile = QIfExistsCopyFile.Overwrite): Path {
     val tempPath = this.qWithBaseDir(QMyPath.temp)
     return this.qCopyFileTo(tempPath, ifExists)
 }
 
-// CallChain[size=3] = Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=3] = Path.qWrite() <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qWrite(
     text: String,
     ifExists: QIfExistsWrite = QIfExistsWrite.OverwriteAtomic,
@@ -472,7 +590,7 @@ internal fun Path.qWrite(
             QIfExistsWrite.OverwriteAtomic -> {
                 val tmp = this.qCreateTempFile()
                 tmp.writeText(text, charset)
-                tmp.qMoveFileTo(this, QIfExistsCopy.Overwrite, atomic = true)
+                tmp.qMoveFileTo(this, QIfExistsCopyFile.Overwrite, atomic = true)
             }
 
             QIfExistsWrite.OverwriteDirect -> {
@@ -486,7 +604,7 @@ internal fun Path.qWrite(
             QIfExistsWrite.AppendAtomicHighCost -> {
                 val tmp = this.qCreateTempFileAndCopyContent()
                 tmp.appendText(text, charset)
-                tmp.qMoveFileTo(this, QIfExistsCopy.Overwrite)
+                tmp.qMoveFileTo(this, QIfExistsCopyFile.Overwrite)
             }
 
             QIfExistsWrite.BackupAndOverwriteAtomic -> {
@@ -494,7 +612,7 @@ internal fun Path.qWrite(
 
                 val tmp = this.qCreateTempFileAndCopyContent()
                 tmp.writeText(text, charset)
-                tmp.qMoveFileTo(this, QIfExistsCopy.Overwrite)
+                tmp.qMoveFileTo(this, QIfExistsCopyFile.Overwrite)
             }
 
             QIfExistsWrite.RaiseException -> {
@@ -510,7 +628,7 @@ internal fun Path.qWrite(
     return this
 }
 
-// CallChain[size=8] = Path.qCreateDir() <-[Call]- QBackupHelper.listBackupFilesExisting() <-[Call]- ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=8] = Path.qCreateDir() <-[Call]- QBackupHelper.listBackupFilesExisting() <-[Call]- ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qCreateDir(
     ifExists: QIfExistsCreateDir = QIfExistsCreateDir.DoNothing,
     createParentDirs: Boolean = true,
@@ -550,7 +668,7 @@ internal fun Path.qCreateDir(
     }
 }
 
-// CallChain[size=3] = Path.qCreateFile() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=9] = Path.qCreateFile() <-[Call]- Path.qCreateZip() <-[Call]- QBackupFile.createBa ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qCreateFile(
     ifExists: QIfExistsCreate = QIfExistsCreate.DoNothing,
     createParentDirs: Boolean = true,
@@ -588,17 +706,17 @@ internal fun Path.qCreateFile(
     }
 }
 
-// CallChain[size=3] = Path.qRelativeFrom() <-[Call]- QGit.gh_release_create() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=6] = Path.qRelativeFrom() <-[Call]- Path.qWithBaseDir() <-[Call]- Path.qTryBackup( ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qRelativeFrom(baseDir: Path = QMyPath.root): Path {
     return baseDir.relativize(this)
 }
 
-// CallChain[size=9] = Path.qRelativeTo() <-[Call]- Path.qCreateZip() <-[Call]- QBackupFile.createBa ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=9] = Path.qRelativeTo() <-[Call]- Path.qCreateZip() <-[Call]- QBackupFile.createBa ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qRelativeTo(childFile: Path = QMyPath.root): Path {
     return this.relativize(childFile)
 }
 
-// CallChain[size=10] = Path.qHashFile() <-[Call]- Path.qHash() <-[Call]- Path.qCopyFileTo() <-[Call ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=10] = Path.qHashFile() <-[Call]- Path.qHash() <-[Call]- Path.qCopyFileTo() <-[Call ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 @Throws(IOException::class, NoSuchAlgorithmException::class)
 private fun Path.qHashFile(
     algorithm: QHash = QHash.DEFAULT,
@@ -724,7 +842,7 @@ internal interface QFetchRule {
             }
         }
 
-        // CallChain[size=5] = QFetchRule.SMART_FETCH_INFIX <-[Call]- QSrcCut.MULTILINE_INFIX_NOCUT <-[Call]- qThrowIt() <-[Call]- Any?.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
+        // CallChain[size=5] = QFetchRule.SMART_FETCH_INFIX <-[Call]- QSrcCut.MULTILINE_INFIX_NOCUT <-[Call]- qThrowIt() <-[Call]- Any.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
         val SMART_FETCH_INFIX = object : QFetchRuleA(10, 10) {
             // """               <<< targetLine
             // some text
@@ -1056,6 +1174,13 @@ internal fun Path.qFetchLinesAround(
     }
 }
 
+// CallChain[size=2] = Path.qNumberOfLines() <-[Call]- QCompactLib.createStat()[Root]
+internal fun Path.qNumberOfLines(): Int {
+    return this.useLines { lines ->
+        lines.count()
+    }
+}
+
 // CallChain[size=10] = Path.qLineAt() <-[Call]- Path.qFetchLinesAround() <-[Call]- qSrcFileLinesAtF ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal fun Path.qLineAt(
     lineNumber: Int,
@@ -1079,7 +1204,7 @@ internal fun Path.qLineAt(
     }
 }
 
-// CallChain[size=11] = Path.qListPrintRecursive() <-[Call]- Path.qHashDir() <-[Call]- Path.qHash()  ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=11] = Path.qListPrintRecursive() <-[Call]- Path.qHashDir() <-[Call]- Path.qHash()  ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 /**
  * List files recursively with filter
  */
@@ -1125,7 +1250,7 @@ internal fun Path.qListPrintRecursive(
     }
 }
 
-// CallChain[size=10] = Path.qHashDir() <-[Call]- Path.qHash() <-[Call]- Path.qCopyFileTo() <-[Call] ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=10] = Path.qHashDir() <-[Call]- Path.qHash() <-[Call]- Path.qCopyFileTo() <-[Call] ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 private fun Path.qHashDir(
     algorithm: QHash = QHash.DEFAULT,
     buffSize: Int = qBUFFER_SIZE,
@@ -1137,7 +1262,7 @@ private fun Path.qHashDir(
     return allRegularFiles.qHash(algorithm, buffSize, modifiedDateHash, additionalData)
 }
 
-// CallChain[size=11] = List<Path>.qHash() <-[Call]- Path.qHashDir() <-[Call]- Path.qHash() <-[Call] ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=11] = List<Path>.qHash() <-[Call]- Path.qHashDir() <-[Call]- Path.qHash() <-[Call] ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun List<Path>.qHash(
     algorithm: QHash = QHash.DEFAULT,
     buffSize: Int = qBUFFER_SIZE,
@@ -1164,14 +1289,14 @@ internal fun List<Path>.qHash(
     return String.format(fx, BigInteger(1, md.digest()))
 }
 
-// CallChain[size=9] = Path.qHash() <-[Call]- Path.qCopyFileTo() <-[Call]- QBackupFile.createBackup( ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=9] = Path.qHash() <-[Call]- Path.qCopyFileTo() <-[Call]- QBackupFile.createBackup( ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qHash(
     algorithm: QHash = QHash.DEFAULT,
     buffSize: Int = qBUFFER_SIZE,
     useModifiedDateForDir: Boolean = true,
     additionalData: String? = null,
 ): String {
-    if( !this.exists() )
+    if (!this.exists())
         return ""
 
     return if (Files.isDirectory(this)) {
@@ -1213,16 +1338,48 @@ internal enum class QFType {
     }
 }
 
+// CallChain[size=4] = Path.qQuoteArg() <-[Call]- QGit.clone_sparse_checkout() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun Path.qQuoteArg(shell: QShell = QShell.DEFAULT): String =
+    pathString.qQuoteArg(shell)
+
+// CallChain[size=5] = Path.qIsEmptyDir() <-[Call]- Path.qIsNotEmpty() <-[Call]- QGit.clone_sparse_checkout() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun Path.qIsEmptyDir(): Boolean {
+    return qList(QFType.Any).isEmpty()
+}
+
+// CallChain[size=4] = Path.qIsNotEmpty() <-[Call]- QGit.clone_sparse_checkout() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun Path.qIsNotEmpty(): Boolean {
+    return !qIsEmptyDir()
+}
+
+// CallChain[size=4] = Path.qDirOrFileSizeStr() <-[Call]- QGit.gitHubDownloadSingleDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun Path.qDirOrFileSizeStr(followSymLink: Boolean = false, maxDepth: Int = Int.MAX_VALUE): String {
+    return if (this.isDirectory()) {
+        this.qDirSizeStr(followSymLink = followSymLink, maxDepth = maxDepth)
+    } else {
+        this.qFileSizeStr()
+    }
+}
+
 // CallChain[size=3] = Path.qImgSize() <-[Call]- QMyCompactLib.exampleSection <-[Ref]- QReadmeScope.defaultExampleSection()[Root]
 internal fun Path.qImgSize(): Dimension {
     val img = ImageIO.read(this.toFile())
     return Dimension(img.width, img.height)
 }
 
+// CallChain[size=5] = Path.qFileSizeStr() <-[Call]- Path.qDirOrFileSizeStr() <-[Call]- QGit.gitHubD ... eDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun Path.qFileSizeStr() = fileSize().qToSizeString()
+
+// CallChain[size=5] = Path.qDirSizeStr() <-[Call]- Path.qDirOrFileSizeStr() <-[Call]- QGit.gitHubDo ... eDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun Path.qDirSizeStr(followSymLink: Boolean = false, maxDepth: Int = Int.MAX_VALUE): String {
+    return this.qList(QFType.Any, maxDepth = maxDepth, followSymLink = followSymLink).sumOf { it.fileSize() }
+        .qToSizeString()
+}
+
 // CallChain[size=2] = Path.qCopyFileIntoDir() <-[Call]- QCompactLib.createLibrary()[Root]
 internal fun Path.qCopyFileIntoDir(
     destDir: Path,
-    ifExists: QIfExistsCopy = QIfExistsCopy.Overwrite,
+    ifExists: QIfExistsCopyFile = QIfExistsCopyFile.Overwrite,
     createParentDirs: Boolean = true
 ): Path {
     if (!destDir.exists()) {
@@ -1238,10 +1395,10 @@ internal fun Path.qCopyFileIntoDir(
     return qCopyFileTo(destDir sep name, ifExists)
 }
 
-// CallChain[size=4] = Path.qMoveFileTo() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=4] = Path.qMoveFileTo() <-[Call]- Path.qWrite() <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qMoveFileTo(
     destPath: Path,
-    ifExistsDestFile: QIfExistsCopy = QIfExistsCopy.Overwrite,
+    ifExistsDestFile: QIfExistsCopyFile = QIfExistsCopyFile.Overwrite,
     atomic: Boolean = true,
     createParentDirs: Boolean = true
 ): Path {
@@ -1258,13 +1415,13 @@ internal fun Path.qMoveFileTo(
 
     var options: QFlag<QCopyOpt> = QFlag.none()
     if (atomic) options += QCopyOpt.ATOMIC_MOVE
-    if (ifExistsDestFile == QIfExistsCopy.Overwrite || ifExistsDestFile == QIfExistsCopy.OverwriteIfDifferentHash) options += QCopyOpt.REPLACE_EXISTING
+    if (ifExistsDestFile == QIfExistsCopyFile.Overwrite || ifExistsDestFile == QIfExistsCopyFile.OverwriteIfDifferentHash) options += QCopyOpt.REPLACE_EXISTING
 
     return try {
         Files.move(this, destPath, *options.toOptEnums())
     } catch (e: FileAlreadyExistsException) {
         when (ifExistsDestFile) {
-            QIfExistsCopy.Overwrite -> {
+            QIfExistsCopyFile.Overwrite -> {
                 try {
                     Files.copy(this, destPath, *options.toOptEnums())
                 } catch (e: kotlin.io.FileAlreadyExistsException) {
@@ -1272,7 +1429,7 @@ internal fun Path.qMoveFileTo(
                 }
             }
 
-            QIfExistsCopy.ChangeFileNameAndRetry -> {
+            QIfExistsCopyFile.ChangeFileNameAndRetry -> {
                 val retryPath = this.qIfExistsRetryPath()
 
                 return try {
@@ -1282,7 +1439,7 @@ internal fun Path.qMoveFileTo(
                 }
             }
 
-            QIfExistsCopy.OverwriteIfDifferentHash -> {
+            QIfExistsCopyFile.OverwriteIfDifferentHash -> {
                 if (this.qHash() == destPath.qHash()) {
                     return destPath
                 } else {
@@ -1294,18 +1451,18 @@ internal fun Path.qMoveFileTo(
                 }
             }
 
-            QIfExistsCopy.RaiseException -> {
+            QIfExistsCopyFile.RaiseException -> {
                 QE.FileAlreadyExists.throwItFile(this)
             }
 
-            QIfExistsCopy.DoNothing -> {
+            QIfExistsCopyFile.DoNothing -> {
                 return destPath
             }
         }
     }
 }
 
-// CallChain[size=9] = Path.qWithNewExtension() <-[Call]- Path.qCreateZip() <-[Call]- QBackupFile.cr ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=9] = Path.qWithNewExtension() <-[Call]- Path.qCreateZip() <-[Call]- QBackupFile.cr ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qWithNewExtension(ext: String): Path {
     val fileNameWithExtension = this.name
 
@@ -1316,6 +1473,38 @@ internal fun Path.qWithNewExtension(ext: String): Path {
     } else {
         this.resolveSibling(fileNameWithExtension.substring(0, dotIdx) + ext.qWithDotPrefix())
     }
+}
+
+// CallChain[size=7] = qILLEGAL_FILENAMES_WINDOWS <-[Call]- String.qEscapeFileName() <-[Call]- Strin ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+// https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file
+internal const val qILLEGAL_FILENAMES_WINDOWS =
+    "CON|PRN|AUX|NUL|COM1|COM2|COM3|COM4|COM5|COM6|COM7|COM8|COM9|LPT1|LPT2|LPT3|LPT4|LPT5|LPT6|LPT7|LPT8|LPT9"
+
+// CallChain[size=6] = String.qEscapeFileName() <-[Call]- String.qRunShellScript() <-[Call]- qRunMet ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun String.qEscapeFileName(): String {
+    var fileName = this.replace("^\\.+", "_")
+        .replace("[\\\\/:*?\"<>|]".re, "_")
+        .replace("\\.+$".re, "_")
+        .trim { it <= ' ' }
+    fileName =
+        fileName.replace("(?i)(^($qILLEGAL_FILENAMES_WINDOWS)$|^($qILLEGAL_FILENAMES_WINDOWS)(?=\\.))".re, "$1_")
+//        fileName = fileName.replace("(^($qILLEGAL_FILENAMES_WINDOWS)$|^($qILLEGAL_FILENAMES_WINDOWS)(?=\\.)$)", "_", true)
+
+    return fileName
+}
+
+// CallChain[size=6] = Long.qToSizeString() <-[Call]- Path.qFileSizeStr() <-[Call]- Path.qDirOrFileS ... eDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun Long.qToSizeString(): String {
+    val size = this
+    if (size <= 0) return "0 B"
+    val units = arrayOf("B", "kB", "MB", "GB", "TB")
+    val digitGroups = (log10(size.toDouble()) / log10(1024.0)).toInt()
+    return DecimalFormat("#,##0.#").format(size / 1024.0.pow(digitGroups.toDouble())) + " " + units[digitGroups]
+}
+
+// CallChain[size=7] = Int.qToSizeString() <-[Call]- QGitObj.diskSizeStr <-[Call]- QGitObj.toString( ... LargeFiles() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+internal fun Int.qToSizeString(): String {
+    return this.toLong().qToSizeString()
 }
 
 // CallChain[size=10] = Collection<Path>.qFind() <-[Call]- qSrcFileAtFrame() <-[Call]- qSrcFileLines ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
@@ -1339,7 +1528,7 @@ internal fun Path.qFind(nameMatcher: QM, type: QFType = QFType.File, maxDepth: I
     }
 }
 
-// CallChain[size=9] = Path.qListRecursive() <-[Call]- Path.qListBackupFiles() <-[Call]- QBackupHelp ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=9] = Path.qListRecursive() <-[Call]- Path.qListBackupFiles() <-[Call]- QBackupHelp ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qListRecursive(
     type: QFType = QFType.File,
     followSymLink: Boolean = false,
@@ -1411,9 +1600,32 @@ internal fun Path.qSeq(
     }
 }
 
-// CallChain[size=4] = Path.qCreateParentDirs() <-[Call]- Path.qCreateFile() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=4] = Path.qCreateParentDirs() <-[Call]- Path.qWrite() <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qCreateParentDirs() {
     if (this.parent != null) {
         Files.createDirectories(this.parent).qaNotNull()
     }
 }
+
+// CallChain[size=2] = Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
+internal suspend fun Path.qOpenEditor(editor: QMyEditor = QMyEditor.Idea, vararg options: String) =
+    withContext(Dispatchers.IO) {
+        try {
+            if (editor == QMyEditor.PlatformDefault) {
+                try {
+                    // https://stackoverflow.com/questions/6273221/open-a-text-file-in-the-default-text-editor-via-java
+                    Desktop.getDesktop().edit(this@qOpenEditor.toFile())
+                } catch (e: Exception) {
+                    val cmd = if (qIsWindows()) "notepad.exe" else "vi"
+
+                    (listOf(cmd) + options + pathString).qExec()
+                }
+            } else {
+                (listOf(editor.cmd) + options + pathString).qRunInShell(
+                    shell = QShell.CMD
+                )
+            }
+        } catch (e: Exception) {
+            QE.FileOpenFail.throwItFile(this@qOpenEditor, e = e)
+        }
+    }

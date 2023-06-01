@@ -10,15 +10,22 @@
 
 package nyab.conf
 
+import nyab.util.blue
+import nyab.util.red
 import nyab.util.yellow
 
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
 // CallChain[size=4] = QMyMark <-[Ref]- QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+@Suppress("MayBeConstant")
 internal object QMyMark {
-    // CallChain[size=4] = QMyMark.WARN <-[Call]- QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
-    val WARN = "⚠".yellow
-    // CallChain[size=3] = QMyMark.README_TITLE <-[Call]- QMyCompactLib.titleSection <-[Ref]- QReadmeScope.defaultTitleSection()[Root]
-    const val README_TITLE = "🐕"
+    // CallChain[size=4] = QMyMark.warn <-[Call]- QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    val warn = "⚠".yellow
+    // CallChain[size=3] = QMyMark.readme_title <-[Call]- QMyCompactLib.titleSection <-[Ref]- QReadmeScope.defaultTitleSection()[Root]
+    val readme_title = "🐕"
+    // CallChain[size=2] = QMyMark.phase_start <-[Call]- QPhase.printPhaseTime()[Root]
+    val phase_start = "▧".blue
+    // CallChain[size=2] = QMyMark.phase_start_long_task <-[Call]- QPhase.printPhaseTime()[Root]
+    val phase_start_long_task = "▧".red
 }

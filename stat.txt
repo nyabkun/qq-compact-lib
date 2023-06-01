@@ -1,0 +1,173 @@
+Version: v2023-06-01-alpha
+
+# Public API [main]
+qCompactLib() - Function
+KtFile.qSrcLineAt() - ExtensionFunction
+QTopLevelCompactElement.toSrcCode() - ExtensionFunction
+KtFile.qReadContent() - ExtensionFunction
+KtElement.qIsSrcLevelTarget() - ExtensionFunction
+KtElement.qCallChainNode() - ExtensionFunction
+KtElement.qClassName() - ExtensionFunction
+KtElement.qIsInChainNode() - ExtensionFunction
+KtElement.qContainingCallChainNode() - ExtensionFunction
+KtElement.qCreateCallChainNode() - ExtensionFunction
+PsiElement.qToDebugSrcString() - ExtensionFunction
+KtElement.qResolveToChain() - ExtensionFunction
+KtElement.qResolveCall() - ExtensionFunction
+KtElement.qDebug() - ExtensionFunction
+KtElement.qContainingFileAndLineNum() - ExtensionFunction
+KtElement.qToDebugString() - ExtensionFunction
+KtElement.qHasChildCallChainNode() - ExtensionFunction
+KtElement.qDeclarationType() - ExtensionFunction
+KtElement.qClassBody() - ExtensionFunction
+KtElement.qVisibility() - ExtensionFunction
+T.qToString() - ExtensionFunction
+T.qToString() - ExtensionFunction
+T.qToString() - ExtensionFunction
+KtElement.qOuter() - ExtensionFunction
+PsiElement.qCommentText() - ExtensionFunction
+PsiElement.qCommentAndAnnotationText() - ExtensionFunction
+PsiElement.qStartOffsetSkippingCommentsAndDeclarationModifierList() - ExtensionFunction
+KtElement.qMaybeFirstTokenIndexSkippingCommentAndAnnotation() - ExtensionFunction
+KtElement.qSrcLevelAsInt() - ExtensionFunction
+KtElement.qSrcLevel() - ExtensionFunction
+KtElement.qOuterShallowSrcLevelTarget() - ExtensionFunction
+KtElement.qOuterSrcLevelTarget() - ExtensionFunction
+KtElement.qInnerDeclarations() - ExtensionFunction
+KtElement.qOuter() - ExtensionFunction
+KtElement.qDetail() - ExtensionFunction
+KtElement.qSimpleName() - ExtensionFunction
+KtElement.qFqName() - ExtensionFunction
+KtElement.qContainingTopLevelCompactElement() - ExtensionFunction
+KtElement.qClassBodyChildren() - ExtensionFunction
+KtElement.qIsPublic() - ExtensionFunction
+KtElement.qIsEquals() - ExtensionFunction
+KtElement.qIsEqualsAny() - ExtensionFunction
+KtElement.qSkipWriting() - ExtensionFunction
+KtElement.qSrcLineNum() - ExtensionFunction
+KtElement.qSrcLine() - ExtensionFunction
+KtElement.qIndentPart() - ExtensionFunction
+QCompactLib.createStat() - ExtensionFunction
+KtFile.qSrcBeforeImports() - ExtensionFunction
+KtFile.qAllTopLevelElements() - ExtensionFunction
+KtFile.qImportPathList() - ExtensionFunction
+KtFile.qImportOffsetRange() - ExtensionFunction
+KtFile.qElementsAll - ExtensionProperty
+KtFile.qElementsTopLevel - ExtensionProperty
+KtFile.qPsiElementsCount - ExtensionProperty
+KtFile.qElementsCount - ExtensionProperty
+KtFile.qFunctions - ExtensionProperty
+KtFile.qCalls - ExtensionProperty
+KtFile.qPath - ExtensionProperty
+KtElement.qElementKey - ExtensionProperty
+KtElement.qElementsAll - ExtensionProperty
+KtElement.qSrc - ExtensionProperty
+KtElement.qPath - ExtensionProperty
+QNodeVisitor - Class
+QCompactLibSrcCode - Class
+QSourceElementDependency - Class
+QCompactLibSrcDirSet - Class
+QCompactLibResult - Class
+QNodeVisitorScope - Class
+QSplitFile - Class
+QCompactLibSrcDirSetScope - Class
+QCompactLibSrcCodeScope - Class
+QCompactLibRepositoryTask - Class
+QPhase - Class
+QAnalysisContext - Class
+QChainNode - Class
+QTopLevelCompactElement - Class
+QResolvedCall - Class
+QIsMustMarkScope - Class
+QTopLevelSrcCodeScope - Class
+QIsMustDiscardScope - Class
+QCompactLibAnalysis - Class
+QNodeResolvedScope - Class
+QVisibilityChangeScope - Class
+QNodePropagatedScope - Class
+QRefTarget - Class
+QSingleFileAnnotationCreationScope - Class
+QRootOfChainTopLevelScope - Class
+QRootOfChainNonTopLevelScope - Class
+QSplitFileAnnotationCreationScope - Class
+QCompactLibRootOfChainScope - Class
+QCompactLibRootOfChain - Class
+QCompactLibScope - Class
+QLicenseScope - Class
+QNextVersionScope - Class
+QCompactLib - Class
+QChain - Class
+QFinalSrcCreationScope - Class
+QNonTopLevelSrcCodeCreationScope - Class
+QJitpackYmlScope - Class
+QReadmeScope - Class
+QBuildGradleKtsScope - Class
+QSplitImportFilterScope - Class
+QSingleImportFilterScope - Class
+QCompactLibIfFileExists - Class
+QCompactLibIfFileExistsScope - Class
+QCompactLibStat - Class
+QKtVisibility - EnumClass
+QResolvedType - EnumClass
+QDeclarationType - EnumClass
+QKtVisibilityChange - EnumClass
+QChainNodeVisitResult - EnumClass
+QChainNodeCompositeType - EnumClass
+QSrcLevel - EnumClass
+QChainNodeType - EnumClass
+QNodeVisited - EnumClass
+QLibPhase - EnumClass
+QAnalysisPhase - EnumClass
+QSrcSetType - EnumClass
+QTopLevelType - EnumClass
+QVersionUpdateStrategy - EnumClass
+QChainType - EnumClass
+QPropagationType - EnumClass
+QNonResolvedCall - DataClass
+QVersion - DataClass
+QCodeExample - DataClass
+QSingleSrcBase - DataClass
+QCompactLibDsl - AnnotationClass
+QKtElementKey - ValueClass
+QSrcCreationUtils - Other
+QDep (Chained) - Class
+QOut (Chained) - Interface
+QMyDepConf (Chained) - EnumClass
+QMyLicense (Chained) - EnumClass
+QShColor (Chained) - EnumClass
+QDepLevel (Chained) - EnumClass
+QIfExistsWrite (Chained) - EnumClass
+QFuncSrc (Chained) - DataClass
+
+# single src file number of lines [main]
+-1
+# split src file number of files [main]
+78
+# number of marked nodes [main]
+1932
+# number of all nodes [main]
+4109
+# number of root of chain nodes [main]
+624
+# single src file number of lines [test]
+-1
+# split src file number of files [test]
+0
+# number of marked nodes [test]
+0
+# number of all nodes [test]
+0
+# number of root of chain nodes [test]
+0
+
+# chain node hit count [main]
+   QTopLevelCompactElement.toSrcCode() [KtNamedFunction] <Top Level> : 411
+                          QE.throwIt() [KtNamedFunction] <Top Level> : 399
+       QException.QException() [KtPrimaryConstructor] <Second Level> : 271
+QCompactLibRepositoryTask.release() [KtNamedFunction] <Second Level> : 243
+              QGit.openRepository() [KtNamedFunction] <Second Level> : 223
+       QException.printStackTrace() [KtNamedFunction] <Second Level> : 206
+                QException.mySrcAndStack [KtProperty] <Second Level> : 205
+                                   QCompactLib [KtClass] <Top Level> : 195
+                            QMyDep [KtObjectDeclaration] <Top Level> : 188
+                     qLogStackFrames() [KtNamedFunction] <Top Level> : 162

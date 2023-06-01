@@ -23,67 +23,74 @@ internal enum class QMyException {
 
     // CallChain[size=2] = QMyException.Unreachable <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     Unreachable,
-    // CallChain[size=3] = QMyException.ShouldBeTrue <-[Call]- Any?.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
+    // CallChain[size=3] = QMyException.ShouldBeTrue <-[Call]- Any.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
     ShouldBeTrue,
-    // CallChain[size=3] = QMyException.ShouldBeFalse <-[Call]- Any?.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
+    // CallChain[size=3] = QMyException.ShouldBeFalse <-[Call]- Any.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
     ShouldBeFalse,
-    // CallChain[size=11] = QMyException.ShouldNotBeNull <-[Call]- T?.qaNotNull() <-[Call]- qSrcFileAtFr ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=11] = QMyException.ShouldNotBeNull <-[Call]- T.qaNotNull() <-[Call]- qSrcFileAtFra ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     ShouldNotBeNull,
-    // CallChain[size=6] = QMyException.ShouldNotBeZero <-[Call]- Int?.qaNotZero() <-[Call]- CharSequenc ... l]- Any?.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+    // CallChain[size=4] = QMyException.ShouldBeEmptyDir <-[Call]- QGit.clone_sparse_checkout() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+    ShouldBeEmptyDir,
+    // CallChain[size=6] = QMyException.ShouldNotBeZero <-[Call]- Int.qaNotZero() <-[Call]- CharSequence ... ll]- Any.qToLogString() <-[Call]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     ShouldNotBeZero,
-    // CallChain[size=3] = QMyException.ShouldBeEqual <-[Call]- Any?.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
+    // CallChain[size=3] = QMyException.ShouldBeEqual <-[Call]- Any.shouldBe() <-[Call]- QChainNode.chainFrom()[Root]
     ShouldBeEqual,
     // CallChain[size=3] = QMyException.ShouldBeDirectory <-[Call]- Path.qCopyFileIntoDir() <-[Call]- QCompactLib.createLibrary()[Root]
     ShouldBeDirectory,
-    // CallChain[size=7] = QMyException.ShouldBeRelativePath <-[Call]- Path.qToRelativePath() <-[Call]-  ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=5] = QMyException.ShouldBeRegularFile <-[Call]- Path.qaFile() <-[Call]- QGit.gitHu ... dateMyself() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+    ShouldBeRegularFile,
+    // CallChain[size=7] = QMyException.ShouldBeRelativePath <-[Call]- Path.qToRelativePath() <-[Call]-  ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     ShouldBeRelativePath,
     // CallChain[size=9] = QMyException.ShouldBeEvenNumber <-[Call]- qBrackets() <-[Call]- qMySrcLinesAt ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     ShouldBeEvenNumber,
-    // CallChain[size=7] = QMyException.CommandFail <-[Call]- List<String>.qExec() <-[Call]- String.qRun ... _remote_origin_url() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=5] = QMyException.ShouldNotBeSubDirectory <-[Call]- Path.qMoveDirTo() <-[Call]- QG ... eDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+    ShouldNotBeSubDirectory,
+
+    // CallChain[size=4] = QMyException.CommandFail <-[Call]- List<String>.qExec() <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     CommandFail,
     // CallChain[size=10] = QMyException.FileNotFound <-[Call]- qSrcFileAtFrame() <-[Call]- qSrcFileLine ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     FileNotFound,
     // CallChain[size=3] = QMyException.DirectoryNotFound <-[Call]- qJAVA_HOME <-[Call]- QCompactLibAnalysis.compilerConfiguration[Root]
     DirectoryNotFound,
-    // CallChain[size=4] = QMyException.FileAlreadyExists <-[Call]- Path.qCreateFile() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=4] = QMyException.FileAlreadyExists <-[Call]- Path.qWrite() <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     FileAlreadyExists,
+    // CallChain[size=5] = QMyException.DirectoryAlreadyExists <-[Call]- Path.qMoveDirTo() <-[Call]- QGi ... eDirOrFile() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+    DirectoryAlreadyExists,
     // CallChain[size=10] = QMyException.FetchLinesFail <-[Call]- Path.qFetchLinesAround() <-[Call]- qSr ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     FetchLinesFail,
     // CallChain[size=11] = QMyException.LineNumberExceedsMaximum <-[Call]- Path.qLineAt() <-[Call]- Pat ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     LineNumberExceedsMaximum,
-    // CallChain[size=9] = QMyException.CreateZipFileFail <-[Call]- Path.qCreateZip() <-[Call]- QBackupF ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=9] = QMyException.CreateZipFileFail <-[Call]- Path.qCreateZip() <-[Call]- QBackupF ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     CreateZipFileFail,
     // CallChain[size=3] = QMyException.IllegalArgument <-[Call]- String.qWithMaxLengthMiddleDots() <-[Call]- QChainNode.chainsToString()[Root]
     IllegalArgument,
-    // CallChain[size=4] = QMyException.OpenBrowserFail <-[Call]- qOpenBrowser() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=4] = QMyException.OpenBrowserFail <-[Call]- qOpenBrowser() <-[Call]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
     OpenBrowserFail,
     // CallChain[size=3] = QMyException.FileOpenFail <-[Call]- Path.qOpenEditor() <-[Call]- QCompactLibResult.openEditorAll()[Root]
     FileOpenFail,
     // CallChain[size=5] = QMyException.FunctionNotFound <-[Call]- KClass<*>.qFunction() <-[Call]- KClas ... qFunctionByName() <-[Call]- Any.qInvokeInstanceFunctionByName() <-[Call]- Any.qInvokeBuild()[Root]
     FunctionNotFound,
+    // CallChain[size=8] = QMyException.MethodNotFound <-[Call]- Class<*>.qMethod() <-[Call]- Class<*>.q ... nameBranch() <-[Propag]- QGit.openRepository() <-[Call]- QCompactLibRepositoryTask.release()[Root]
+    MethodNotFound,
     // CallChain[size=2] = QMyException.ImportOffsetFail <-[Call]- KtFile.qImportOffsetRange()[Root]
     ImportOffsetFail,
 
     // CallChain[size=2] = QMyException.InvalidPhaseTransition <-[Call]- QPhase.nextPhase()[Root]
     InvalidPhaseTransition;
 
-    companion object {
-        // Required to implement extended functions.
+    
+}
 
-        // CallChain[size=4] = QMyException.STACK_FRAME_FILTER <-[Call]- QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
-        val STACK_FRAME_FILTER: (StackWalker.StackFrame) -> Boolean = {
-            !it.className.startsWith("org.gradle") &&
-                !it.className.startsWith("org.testng") &&
-                !it.className.startsWith("worker.org.gradle") &&
-                !it.methodName.endsWith("\$default") && it.fileName != null &&
+// CallChain[size=4] = qSTACK_FRAME_FILTER <-[Call]- QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+internal val qSTACK_FRAME_FILTER: (StackWalker.StackFrame) -> Boolean = {
+    !it.className.startsWith("org.gradle") &&
+            !it.className.startsWith("org.testng") &&
+            !it.className.startsWith("worker.org.gradle") &&
+            !it.methodName.endsWith("\$default") && it.fileName != null &&
 //            && !it.className.startsWith(QException::class.qualifiedName!!)
 //            && it.methodName != "invokeSuspend"
-                it.declaringClass != null
+            it.declaringClass != null
 //            && it.declaringClass.canonicalName != null
 //            && !it.declaringClass.canonicalName.startsWith("kotlin.coroutines.jvm.internal.")
 //            && !it.declaringClass.canonicalName.startsWith("kotlinx.coroutines")
-        }
-
-        
-    }
 }

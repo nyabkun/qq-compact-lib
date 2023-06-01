@@ -23,22 +23,22 @@ import kotlinx.coroutines.delay
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
-// CallChain[size=7] = qHOUR <-[Call]- QBackupSlot.hour() <-[Call]- QBackupSlot.DEFAULT_SLOTS <-[Cal ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=7] = qHOUR <-[Call]- QBackupSlot.hour() <-[Call]- QBackupSlot.DEFAULT_SLOTS <-[Cal ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal const val qHOUR = 3_600_000L
 
-// CallChain[size=8] = qDAY <-[Call]- qYEAR <-[Call]- QBackupSlot.year() <-[Call]- QBackupSlot.DEFAU ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=8] = qDAY <-[Call]- qYEAR <-[Call]- QBackupSlot.year() <-[Call]- QBackupSlot.DEFAU ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal const val qDAY = 86_400_000L
 
-// CallChain[size=7] = qWEEK <-[Call]- QBackupSlot.week() <-[Call]- QBackupSlot.DEFAULT_SLOTS <-[Cal ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=7] = qWEEK <-[Call]- QBackupSlot.week() <-[Call]- QBackupSlot.DEFAULT_SLOTS <-[Cal ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal const val qWEEK = qDAY * 7
 
-// CallChain[size=7] = qMONTH <-[Call]- QBackupSlot.month() <-[Call]- QBackupSlot.DEFAULT_SLOTS <-[C ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=7] = qMONTH <-[Call]- QBackupSlot.month() <-[Call]- QBackupSlot.DEFAULT_SLOTS <-[C ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal const val qMONTH = qDAY * 30
 
-// CallChain[size=7] = qYEAR <-[Call]- QBackupSlot.year() <-[Call]- QBackupSlot.DEFAULT_SLOTS <-[Cal ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=7] = qYEAR <-[Call]- QBackupSlot.year() <-[Call]- QBackupSlot.DEFAULT_SLOTS <-[Cal ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal const val qYEAR = qDAY * 365
 
-// CallChain[size=14] = qNow <-[Call]- qCacheItTimedThreadLocal() <-[Call]- qCacheItOneSecThreadLoca ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
+// CallChain[size=9] = qNow <-[Call]- qCacheItTimedThreadLocal() <-[Call]- qCacheItOneSecThreadLocal ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
 internal val qNow: Long
     get() = System.currentTimeMillis()
 

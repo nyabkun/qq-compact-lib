@@ -12,21 +12,31 @@ package nyab.compact
 
 import java.nio.charset.Charset
 import java.nio.file.Path
+import java.util.*
+import kotlin.Comparator
 import kotlin.io.path.exists
+import kotlin.io.path.name
 import kotlin.io.path.pathString
 import kotlin.io.path.readText
-import nyab.conf.*
+import kotlin.reflect.KClass
+import nyab.conf.QE
+import nyab.conf.QMyCompactLib
+import nyab.conf.QMyCompactLibGradle
+import nyab.conf.QMyDep
+import nyab.conf.QMyPath
 import nyab.match.QM
 import nyab.util.QDateVersion
 import nyab.util.QFuncSrc
 import nyab.util.QHash
-import nyab.util.QIfExistsCopy
+import nyab.util.QIfExistsCopyFile
 import nyab.util.QIfExistsWrite
 import nyab.util.QOnlyIfStr
 import nyab.util.QRunResult
+import nyab.util.QShColor
 import nyab.util.conf.QDep
 import nyab.util.log
-import nyab.util.noColor
+import nyab.util.logGreen
+import nyab.util.noStyle
 import nyab.util.path
 import nyab.util.qCacheIt
 import nyab.util.qCamelCaseToKebabCase
@@ -41,12 +51,15 @@ import nyab.util.qHash
 import nyab.util.qInvokeInstanceFunctionByName
 import nyab.util.qIsSubDirOrFileOf
 import nyab.util.qNiceIndent
+import nyab.util.qNumberOfLines
 import nyab.util.qReadFile
+import nyab.util.qRelativeTo
 import nyab.util.qRunInShell
 import nyab.util.qSecondLine
 import nyab.util.qStartsWithAny
 import nyab.util.qThisFileName
 import nyab.util.qThisFilePackageName
+import nyab.util.qTimeIt
 import nyab.util.qToday
 import nyab.util.qWithNewLineSuffix
 import nyab.util.qWithNewLineSurround
@@ -148,9 +161,31 @@ private val DEFAULT_ROOT_OF_CHAIN: QRootOfChainTopLevelScope.() -> Boolean = { f
 @QCompactLibDsl
 class QCompactLibScope internal constructor(
     val libName: String,
-    val author: String,
-    val baseFileName: String
+    val author: String
 ) {
+    // << Root of the CallChain >>
+    fun baseFileName(baseFileName: String) {
+        this.baseFileNames(baseFileName)
+    }
+
+    // << Root of the CallChain >>
+    fun baseFileNames(baseFileName: String, vararg more: String) {
+        destMainSrcFileName = "${baseFileName}.kt"
+
+        destTestSrcFileName = "${baseFileName}Test.kt"
+
+        exampleSrcFileName = "${baseFileName}Example.kt"
+
+        rootOfChain {
+            mainTopLevel {
+                fileName == "${baseFileName}.kt" || more.any { baseName -> fileName == "$baseName.kt" }
+            }
+            testTopLevel {
+                fileName == "${baseFileName}Test.kt"
+            }
+        }
+    }
+
     // << Root of the CallChain >>
     private val srcCode = QCompactLibSrcCodeScope()
 
@@ -173,7 +208,14 @@ class QCompactLibScope internal constructor(
     // << Root of the CallChain >>
     var createSingleFileSrc: Boolean = true
 
-//    var createSplitFileSrc: Boolean = true
+    // << Root of the CallChain >>
+    val visibilityUnchangedClasses: MutableList<KClass<*>> = mutableListOf()
+
+    // << Root of the CallChain >>
+    val fullPropagationClasses: MutableList<KClass<*>> = mutableListOf()
+
+    // << Root of the CallChain >>
+    val noPropagationClasses: MutableList<KClass<*>> = mutableListOf()
 
     // << Root of the CallChain >>
     var createLibJarFromSplitFileSrc: Boolean = true
@@ -196,23 +238,13 @@ class QCompactLibScope internal constructor(
     var versionSuffix: String = ""
 
     // << Root of the CallChain >>
-    private var splitSrcFileImportFilter: QSplitImportFilterScope.() -> Boolean = { default() }
+    private var splitSrcFileImportFilter: QSplitImportFilterScope.() -> Boolean = QSplitImportFilterScope::default
 
     // << Root of the CallChain >>
-    private var nextVersion: QNextVersionScope.() -> String = { default() }
+    private var nextVersion: QNextVersionScope.() -> String = QNextVersionScope::default
     // << Root of the CallChain >>
     fun nextVersion(version: String) {
         nextVersion = { version }
-    }
-
-    // << Root of the CallChain >>
-    private var commitMessage: QCommitMessageScope.() -> String = {
-        default()
-    }
-
-    // << Root of the CallChain >>
-    fun commitMessage(block: QCommitMessageScope.() -> String) {
-        this.commitMessage = block
     }
 
     // << Root of the CallChain >>
@@ -226,9 +258,7 @@ class QCompactLibScope internal constructor(
     }
 
     // << Root of the CallChain >>
-    private var singleSrcFileImportFilter: QSingleImportFilterScope.() -> Boolean = {
-        default()
-    }
+    private var singleSrcFileImportFilter: QSingleImportFilterScope.() -> Boolean = QSingleImportFilterScope::default
 
     // << Root of the CallChain >>
     fun singleSrcFileImportFilter(block: QSingleImportFilterScope.() -> Boolean) {
@@ -236,7 +266,7 @@ class QCompactLibScope internal constructor(
     }
 
     // << Root of the CallChain >>
-    private var readme: QReadmeScope.() -> String = { default() }
+    private var readme: QReadmeScope.() -> String = QReadmeScope::default
 
     // << Root of the CallChain >>
     fun readme(block: QReadmeScope.() -> String) {
@@ -244,7 +274,7 @@ class QCompactLibScope internal constructor(
     }
 
     // << Root of the CallChain >>
-    private var jitpackYml: QJitpackYmlScope.() -> String = { default() }
+    private var jitpackYml: QJitpackYmlScope.() -> String = QJitpackYmlScope::default
 
     // << Root of the CallChain >>
     fun jitpackYml(block: QJitpackYmlScope.() -> String) {
@@ -252,7 +282,8 @@ class QCompactLibScope internal constructor(
     }
 
     // << Root of the CallChain >>
-    private var singleFileAnnotation: (QSingleFileAnnotationCreationScope).() -> String = { default() }
+    private var singleFileAnnotation: QSingleFileAnnotationCreationScope.() -> String =
+        QSingleFileAnnotationCreationScope::default
 
     // << Root of the CallChain >>
     fun singleFileAnnotation(block: QSingleFileAnnotationCreationScope.() -> String) {
@@ -260,9 +291,8 @@ class QCompactLibScope internal constructor(
     }
 
     // << Root of the CallChain >>
-    private var splitFileAnnotation: (QSplitFileAnnotationCreationContext).() -> String = {
-        default()
-    }
+    private var splitFileAnnotation: QSplitFileAnnotationCreationScope.() -> String =
+        QSplitFileAnnotationCreationScope::default
 
     // << Root of the CallChain >>
     var group: String = if (!author.qStartsWithAny("com.", "org.")) {
@@ -270,12 +300,6 @@ class QCompactLibScope internal constructor(
     } else {
         author
     }
-
-    // << Root of the CallChain >>
-    var repoDescription: String = ""
-
-    // << Root of the CallChain >>
-    var repoTopics: List<String> = emptyList()
 
     // << Root of the CallChain >>
     var readmeDescription: String = "#TODO#"
@@ -311,13 +335,26 @@ class QCompactLibScope internal constructor(
     var enableSpotless = false
 
     // << Root of the CallChain >>
-    var destMainSrcFileName: String = "$baseFileName.kt"
+    var runTest: Boolean = true
 
     // << Root of the CallChain >>
-    var destTestSrcFileName: String = "${baseFileName}Test.kt"
+    var runExample: Boolean = true
 
     // << Root of the CallChain >>
-    var destExampleSrcFileName: String = "${baseFileName}Example.kt"
+    var destMainSrcFileName: String = ""
+
+    // << Root of the CallChain >>
+    var destTestSrcFileName: String = ""
+
+    // << Root of the CallChain >>
+    var exampleSrcDirToSearch: QCompactLibSrcDirSet.() -> List<Path> = {
+        val mainSrcDir = this.main[0]
+
+        listOf(mainSrcDir.resolveSibling("src-example"), mainSrcDir.resolveSibling("src-build"), mainSrcDir)
+    }
+
+    // << Root of the CallChain >>
+    var exampleSrcFileName: String = ""
 
     // << Root of the CallChain >>
     var destProjDir: Path = (QMyPath.compact sep libName).toAbsolutePath()
@@ -378,10 +415,10 @@ class QCompactLibScope internal constructor(
     """.trimIndent()
 
     // << Root of the CallChain >>
-    var license: String = QMyCompactLib.license
+    var license: QLicenseScope.() -> String = QMyCompactLib.license
 
     // << Root of the CallChain >>
-    var srcHeader: String = QMyCompactLib.src_header
+    var srcHeader: QLicenseScope.() ->String = QMyCompactLib.src_header
 
     // << Root of the CallChain >>
     var gitIgnore: String = QMyCompactLib.git_ignore
@@ -397,17 +434,28 @@ class QCompactLibScope internal constructor(
 
     // << Root of the CallChain >>
     private fun build(): QCompactLib {
+        val srcDirSet = srcDirs.qInvokeBuild() as QCompactLibSrcDirSet
+
+        if (exampleSrcFile == null) {
+            exampleSrcFile = exampleSrcDirToSearch(srcDirSet).firstNotNullOfOrNull {
+                it.qFind(nameMatcher = QM.exact(exampleSrcFileName), maxDepth = 100)
+            }
+        } else {
+            exampleSrcFileName = exampleSrcFile!!.name
+        }
+
+        exampleSrcFile.log
+
         return QCompactLib(
-            phase = QPhase(QLibPhase::class),
+            phase = QPhase(QLibPhase::class, fg = QShColor.Yellow),
             libName = libName,
             author = author,
-            baseFileName = baseFileName,
             nextVersion = nextVersion,
             versionUpdateStrategy = versionUpdateStrategy,
             versionSuffix = versionSuffix,
             srcCode = srcCode.qInvokeBuild() as QCompactLibSrcCode,
             rootOfChain = rootOfChain.qInvokeBuild() as QCompactLibRootOfChain,
-            srcDirs = srcDirs.qInvokeBuild() as QCompactLibSrcDirSet,
+            srcDirs = srcDirSet,
             createSingleFileSrc = createSingleFileSrc,
             createLibJarFromSplitFileSrc = createLibJarFromSplitFileSrc,
             nodeVisitor = nodeVisitor.qInvokeBuild() as QNodeVisitor,
@@ -418,7 +466,7 @@ class QCompactLibScope internal constructor(
             buildGradleKts = buildGradleKts,
             dependenciesToCheck = dependenciesToCheck,
             destExampleDir = destExampleDir,
-            destExampleSrcFileName = destExampleSrcFileName,
+            destExampleSrcFileName = exampleSrcFileName,
             destSingleMainDir = destSingleMainDir,
             destSplitMainDir = destSplitMainDir,
             destMainSrcFileName = destMainSrcFileName,
@@ -428,6 +476,8 @@ class QCompactLibScope internal constructor(
             destTestSrcFileName = destTestSrcFileName,
             destJarFileName = destJarFileName,
             destSourcesJarFileName = destSourcesJarFileName,
+            runExample = runExample,
+            runTest = runTest,
             exampleSrcFile = exampleSrcFile,
             gitHubRepoName = gitHubRepoName,
             gitIgnore = gitIgnore,
@@ -442,8 +492,6 @@ class QCompactLibScope internal constructor(
             readme = readme,
             readmeDescription = readmeDescription,
             references = references,
-            repoDescription = repoDescription,
-            repoTopics = repoTopics,
             singleSrcFileImportFilter = singleSrcFileImportFilter,
             splitSrcFileImportFilter = splitSrcFileImportFilter,
             srcCharset = srcCharset,
@@ -454,7 +502,9 @@ class QCompactLibScope internal constructor(
             splitFileAnnotation = splitFileAnnotation,
             topLevelElementsSorter = topLevelElementsSorter,
             enableSpotless = enableSpotless,
-            commitMessage = commitMessage
+            fullPropagationClasses = fullPropagationClasses,
+            noPropagationClasses = noPropagationClasses,
+            visibilityUnchangedClasses = visibilityUnchangedClasses
         )
     }
 
@@ -478,6 +528,10 @@ class QCompactLibScope internal constructor(
         ifFileExists.block()
     }
 }
+
+// << Root of the CallChain >>
+@QCompactLibDsl
+class QLicenseScope(val lib: QCompactLib, val year: Int, val author: String)
 
 // << Root of the CallChain >>
 @QCompactLibDsl
@@ -546,7 +600,6 @@ class QCompactLib internal constructor(
     val phase: QPhase<QLibPhase>,
     val libName: String,
     val author: String,
-    val baseFileName: String,
     val nextVersion: QNextVersionScope.() -> String,
     val versionUpdateStrategy: QVersionUpdateStrategy,
     val versionSuffix: String,
@@ -557,8 +610,6 @@ class QCompactLib internal constructor(
     val ifFileExists: QCompactLibIfFileExists,
     val rootOfChain: QCompactLibRootOfChain,
     val group: String,
-    val repoDescription: String,
-    val repoTopics: List<String>,
     val readmeDescription: String,
     val references: String,
     val strictImportCheck: Boolean,
@@ -583,23 +634,27 @@ class QCompactLib internal constructor(
     val destExampleDir: Path,
     val destJarFileName: (version: String) -> String,
     val destSourcesJarFileName: (version: String) -> String,
+    val runExample: Boolean,
+    val runTest: Boolean,
     val dependenciesToCheck: List<QDep> = QMyDep.ALL,
     val srcCharset: Charset = Charsets.UTF_8,
     val buildGradleKts: QBuildGradleKtsScope.() -> String,
     val betweenImportsAndFirstElement: String,
     val betweenImportsAndFirstElementTest: String,
     val betweenImportsAndFirstElementSplit: String,
-    val license: String = QMyCompactLib.license,
-    val srcHeader: String = QMyCompactLib.src_header,
+    val license: QLicenseScope.() -> String = QMyCompactLib.license,
+    val srcHeader: QLicenseScope.() -> String = QMyCompactLib.src_header,
     val gitIgnore: String = QMyCompactLib.git_ignore,
     val readme: QReadmeScope.() -> String,
     val jitpackYml: QJitpackYmlScope.() -> String,
     val singleFileAnnotation: (QSingleFileAnnotationCreationScope).() -> String,
-    val splitFileAnnotation: (QSplitFileAnnotationCreationContext).() -> String,
+    val splitFileAnnotation: (QSplitFileAnnotationCreationScope).() -> String,
     val topLevelElementsSorter: Comparator<QTopLevelCompactElement>,
     val nodeVisitor: QNodeVisitor,
     val enableSpotless: Boolean,
-    val commitMessage: QCommitMessageScope.() -> String
+    var visibilityUnchangedClasses: MutableList<KClass<*>>,
+    var fullPropagationClasses: MutableList<KClass<*>>,
+    var noPropagationClasses: MutableList<KClass<*>>
 ) {
     companion object {
         // << Root of the CallChain >>
@@ -632,7 +687,7 @@ class QCompactLib internal constructor(
     }
 
     // << Root of the CallChain >>
-    fun destSplitMainSrcDirPathFromProjDir(): Path {
+    fun destMainSplitSrcDirPathFromProjDir(): Path {
         return destProjDir.relativize(destSplitMainDir).normalize()
     }
 
@@ -642,7 +697,7 @@ class QCompactLib internal constructor(
     }
 
     // << Root of the CallChain >>
-    fun destTestSplitMainSrcFilePathFromProjDir(): Path {
+    fun destTestSplitSrcFilePathFromProjDir(): Path {
         val srcFile = this.destSplitTestDir.qFind(QM.exact(this.destTestSrcFileName), maxDepth = 100)
 
         return if (srcFile != null) {
@@ -752,23 +807,6 @@ class QJitpackYmlScope internal constructor(
 }
 
 // << Root of the CallChain >>
-@QCompactLibDsl
-class QCommitMessageScope internal constructor(
-    val lib: QCompactLib,
-    val result: QCompactLibResult,
-    val isNewlyCreatedRepository: Boolean
-) {
-    // << Root of the CallChain >>
-    fun default(): String {
-        return if (isNewlyCreatedRepository) {
-            "[auto] First Build."
-        } else {
-            "[auto] Reflect the changes of main repository."
-        }
-    }
-}
-
-// << Root of the CallChain >>
 data class QCodeExample(
     val functionName: String,
     val functionContent: String
@@ -783,13 +821,15 @@ data class QCodeExample(
 class QReadmeScope internal constructor(
     val lib: QCompactLib,
     val libName: String,
-    val version: String,
+    val latestReleaseVersion: String,
+    val nextVersion: String,
     val currentReadme: String,
     val destSplitMainSrcDirPath: String,
     val destSingleMainSrcFilePath: String,
     val destSingleTestSrcFilePath: String,
     val destSplitTestSrcFilePath: String,
     val destExampleSrcFilePath: String,
+    val publicAPIs: List<QTopLevelCompactElement>,
     val exampleMainFunction: QFuncSrc?,
     val exampleNonMainFunctions: List<QFuncSrc>,
     val mainDependencyLines: List<String>,
@@ -801,6 +841,8 @@ class QReadmeScope internal constructor(
             ${defaultTitleSection().qNiceIndent(3)}
             
             ${defaultExampleSection().qNiceIndent(3)}
+            
+            ${defaultPublicAPISection().qNiceIndent(3)}
             
             ${defaultDependenciesSection().qNiceIndent(3)}
             
@@ -833,6 +875,11 @@ class QReadmeScope internal constructor(
     }
 
     // << Root of the CallChain >>
+    fun defaultPublicAPISection(): String {
+        return QMyCompactLib.publicAPISection(this)
+    }
+
+    // << Root of the CallChain >>
     fun defaultExampleSection(): String {
         return QMyCompactLib.exampleSection(this)
     }
@@ -857,8 +904,6 @@ class QBuildGradleKtsScope internal constructor(
     val testSingleMainClass: String,
     val testSplitMainClass: String,
     val exampleMainClass: String,
-    val gitHubUserName: String,
-    val gitHubRepoName: String,
 ) {
     // << Root of the CallChain >>
     val lib
@@ -931,7 +976,7 @@ class QCompactLibIfFileExists internal constructor(
 @QCompactLibDsl
 class QCompactLibIfFileExistsScope internal constructor() {
     // << Root of the CallChain >>
-    var ifExistsReadeMeFile: QIfExistsWrite = QIfExistsWrite.DoNothing
+    var ifExistsReadMeFile: QIfExistsWrite = QIfExistsWrite.BackupAndOverwriteAtomic
     // << Root of the CallChain >>
     var ifExistsBuildGradleKtsFile: QIfExistsWrite = QIfExistsWrite.OverwriteAtomic
     // << Root of the CallChain >>
@@ -945,7 +990,7 @@ class QCompactLibIfFileExistsScope internal constructor() {
     // << Root of the CallChain >>
     private fun build(): QCompactLibIfFileExists {
         return QCompactLibIfFileExists(
-            ifExistsReadeMeFile = ifExistsReadeMeFile,
+            ifExistsReadeMeFile = ifExistsReadMeFile,
             ifExistsBuildGradleKtsFile = ifExistsBuildGradleKtsFile,
             ifExistsSettingsGradleKtsFile = ifExistsSettingsGradleKtsFile,
             ifExistsGitIgnoreFile = ifExistsGitIgnoreFile,
@@ -965,12 +1010,80 @@ private fun QCompactLib.clearExistingSrcFiles() {
 }
 
 // << Root of the CallChain >>
+class QCompactLibStat(
+    val statFile: Path,
+    val mainPublicAPIs: List<QTopLevelCompactElement>,
+    val mainNumberOfMarkedNodes: Int,
+    val testNumberOfMarkedNodes: Int,
+    val mainNumberOfAllNodes: Int,
+    val testNumberOfAllNodes: Int,
+    val mainNumberOfRootOfChainNodes: Int,
+    val testNumberOfRootOfChainNodes: Int,
+    val mainSingleSrcFileNumberOfLines: Int,
+    val testSingleSrcFileNumberOfLines: Int,
+    val mainSplitSrcNumberOfFiles: Int,
+    val testSplitSrcNumberOfFiles: Int
+) {
+    // << Root of the CallChain >>
+    private fun apiToString(onlyRootOfChain: Boolean = false): String {
+        return mainPublicAPIs.asSequence().filter {
+            !onlyRootOfChain || it.isChainRoot()
+        }.sortedBy {
+            it.lineNumber
+        }.sortedBy {
+            it.type.ordinal
+        }.sortedByDescending {
+            it.isChainRoot()
+        }.joinToString("\n") {
+            val chain = if (it.isChainRoot()) {
+                ""
+            } else {
+                " (Chained)"
+            }
+
+            "${it.simpleName}$chain - ${it.type.name}"
+        }
+    }
+
+    // << Root of the CallChain >>
+    override fun toString(): String {
+        return """
+            # Public API [main]
+            ${apiToString().qNiceIndent(3)}
+            
+            # single src file number of lines [main]
+            $mainSingleSrcFileNumberOfLines
+            # split src file number of files [main]
+            $mainSplitSrcNumberOfFiles
+            # number of marked nodes [main]
+            $mainNumberOfMarkedNodes
+            # number of all nodes [main]
+            $mainNumberOfAllNodes
+            # number of root of chain nodes [main]
+            $mainNumberOfRootOfChainNodes
+            # single src file number of lines [test]
+            $testSingleSrcFileNumberOfLines
+            # split src file number of files [test]
+            $testSplitSrcNumberOfFiles
+            # number of marked nodes [test]
+            $testNumberOfMarkedNodes
+            # number of all nodes [test]
+            $testNumberOfAllNodes
+            # number of root of chain nodes [test]
+            $testNumberOfRootOfChainNodes
+        """.trimIndent()
+    }
+}
+
+// << Root of the CallChain >>
 private suspend fun QCompactLib.createLibrary(): QCompactLibResult {
     this.phase.nextPhase(QLibPhase.MainSrcAnalysis)
 
     val mainCtx = QAnalysisContext(this, false, emptySet())
 
-    val mainSingleSrcBase = qCreateSingleSrcBase(mainCtx)
+    val licenseScope = QLicenseScope(this, Calendar.getInstance().get(Calendar.YEAR), author)
+
+    val mainSingleSrcBase = qCreateSingleSrcBase(mainCtx, licenseScope)
 
     mainCtx.singleSrcBase = mainSingleSrcBase
 
@@ -983,32 +1096,26 @@ private suspend fun QCompactLib.createLibrary(): QCompactLibResult {
     var testCtx: QAnalysisContext? = null
 
     this.phase.nextPhase(QLibPhase.CleanExistingSrc)
+
     this.clearExistingSrcFiles()
 
     this.phase.nextPhase(QLibPhase.ReadExampleSrc)
-    exampleSrcFile?.exists().log
 
     val exampleFunctions = exampleSrcFile.qReadCodeExamples(srcCharset)
 
     if (this.exampleSrcFile?.exists() == true) {
         exampleSrcFile.qCopyFileIntoDir(
             this.destExampleDir,
-            ifExists = QIfExistsCopy.Overwrite
+            ifExists = QIfExistsCopyFile.Overwrite
         )
     }
 
     this.phase.nextPhase(QLibPhase.CreateTestSrcAnalysisAndSrc)
 
     if (hasTest) {
-//        val visibleElementsFromTest = analysisCtx.containingCompactElements.filter {
-//            it.value.finalVisibility != QKtVisibility.Private
-//        }.keys
-
         testCtx = QAnalysisContext(this, true, emptySet())
 
-        val testBase = qCreateSingleSrcBase(
-            testCtx
-        )
+        val testBase = qCreateSingleSrcBase(testCtx, licenseScope)
 
         testCtx.singleSrcBase = testBase
 
@@ -1126,71 +1233,18 @@ private suspend fun QCompactLib.createLibrary(): QCompactLibResult {
 
     val licenseFile = destProjDir.resolve("LICENSE")
 
-    licenseFile.qWrite(license, ifExists = ifFileExists.ifExistsLicenseFile)
+    licenseFile.qWrite(license(licenseScope), ifExists = ifFileExists.ifExistsLicenseFile)
 
-    this.phase.nextPhase(QLibPhase.CreateChainNodeCount)
+    this.phase.nextPhase(QLibPhase.CreateVersionFile)
 
-    val chainNodeCountFile = destProjDir.resolve("CallChainNodeHitCount.txt")
-
-    val chainNodeCount = """
-## main
-${mainCtx.nodeHitCount(10)}
-
-${
-        if (testCtx != null) {
-            """
-## test
-${testCtx.nodeHitCount(10)}
-""".trim()
-        } else {
-            ""
-        }
-    }""".trim()
-
-    chainNodeCountFile.qWrite(chainNodeCount.noColor, ifExists = QIfExistsWrite.OverwriteAtomic)
-
-    this.phase.nextPhase(QLibPhase.CreateReadme)
-
-    val readMeFile = destProjDir.resolve("README.md")
-
-    val curReadMeContent = if (readMeFile.exists()) {
-        readMeFile.qReadFile()
-    } else {
-        ""
-    }
-
-    val exampleMainFunc: QFuncSrc? = exampleFunctions.find {
-        it.name == "main"
-    }
-
-    val exampleNonMainFunctions: List<QFuncSrc> = exampleFunctions.filter {
-        it.name != "main"
-    }
-
-
-
-    val readMeSrc = readme(
-        QReadmeScope(
-            lib = this,
-            libName = libName,
-            version = version,
-            currentReadme = curReadMeContent,
-            destSplitMainSrcDirPath = this.destSplitMainSrcDirPathFromProjDir().slash,
-            destSingleMainSrcFilePath = this.destMainSingleSrcFilePathFromProjDir().slash,
-            destSingleTestSrcFilePath = this.destTestSingleSrcFilePathFromProjDir().slash,
-            destSplitTestSrcFilePath = this.destTestSplitMainSrcFilePathFromProjDir().slash,
-            destExampleSrcFilePath = this.destExampleSrcFilePathFromProjDir().slash,
-            mainDependencyLines = mainCtx.dependencyLines,
-            testDependencyLines = testCtx?.dependencyLines ?: emptyList(),
-            exampleMainFunction = exampleMainFunc,
-            exampleNonMainFunctions = exampleNonMainFunctions
-        )
-    )
-
-    readMeFile.qWrite(readMeSrc, ifExists = ifFileExists.ifExistsReadeMeFile)
+    val jar = destArtifactsDir.resolve(destJarFileName(version))
+    val srcJar = destArtifactsDir.resolve(destSourcesJarFileName(version))
+    val artifacts = listOf(jar, srcJar).joinToString(";") { destProjDir.qRelativeTo(it).slash }
 
     val versionFile = destProjDir.resolve("VERSION")
-    versionFile.qWrite(version + "\n" + newHash, ifExists = QIfExistsWrite.OverwriteAtomic)
+    versionFile.qWrite(version + "\n" + newHash + "\n" + artifacts, ifExists = QIfExistsWrite.OverwriteAtomic)
+
+    this.phase.nextPhase(QLibPhase.CreateJitpackYmlFile)
 
     val jitpackYmlFile = destProjDir.resolve("jitpack.yml")
 
@@ -1210,10 +1264,27 @@ ${testCtx.nodeHitCount(10)}
 
     jitpackYmlFile.qWrite(jitpackYmlSrc, ifExists = ifFileExists.ifExistsJitpackYmlFile)
 
+    phase.nextPhase(QLibPhase.CreateStat)
+
+    val stat = createStat(
+        version = version,
+        mainCtx = mainCtx,
+        testCtx = testCtx,
+        destMainSingleFile = destMainSingleFile,
+        destTestSingleFile = destTestSingleFile,
+        mainSingleSrcBase = mainSingleSrcBase
+    )
+
+    this.phase.nextPhase(QLibPhase.CreateReadme)
+
+    val readMeFile = createReadme(latestRelease, version, mainCtx, testCtx, exampleFunctions)
+
     this.phase.nextPhase(QLibPhase.Result)
 
     return QCompactLibResult(
         lib = this,
+        stat = stat,
+        latestReleaseVersion = latestRelease,
         version = version,
         oldHash = newHash,
         newHash = currentVersion.srcHash,
@@ -1226,14 +1297,127 @@ ${testCtx.nodeHitCount(10)}
         buildGradleKtsFile = buildGradleKtsFile,
         settingsGradleKtsFile = settingsGradleKtsFile,
         gitIgnoreFile = gitIgnoreFile,
-        chainNodeCount = chainNodeCount,
         buildSuccess = buildSuccess,
     )
 }
 
 // << Root of the CallChain >>
+private fun QCompactLib.createReadme(
+    latestReleaseVersion: String,
+    nextVersion: String,
+    mainCtx: QAnalysisContext,
+    testCtx: QAnalysisContext?,
+    exampleFunctions: List<QFuncSrc>,
+): Path {
+    val readMeFile = destProjDir.resolve("README.md")
+
+    val curReadMeContent = if (readMeFile.exists()) {
+        readMeFile.qReadFile()
+    } else {
+        ""
+    }
+
+    val exampleMainFunc: QFuncSrc? = exampleFunctions.find {
+        it.name == "main"
+    }
+
+    val exampleNonMainFunctions: List<QFuncSrc> = exampleFunctions.filter {
+        it.name != "main"
+    }
+
+    val readMeSrc =
+        "<!--- version = $nextVersion --->\n\n" + readme(
+            QReadmeScope(
+                lib = this,
+                libName = libName,
+                latestReleaseVersion = latestReleaseVersion.ifEmpty { nextVersion },
+                nextVersion = nextVersion,
+                currentReadme = curReadMeContent,
+                destSplitMainSrcDirPath = this.destMainSplitSrcDirPathFromProjDir().slash,
+                destSingleMainSrcFilePath = this.destMainSingleSrcFilePathFromProjDir().slash,
+                destSingleTestSrcFilePath = this.destTestSingleSrcFilePathFromProjDir().slash,
+                destSplitTestSrcFilePath = this.destTestSplitSrcFilePathFromProjDir().slash,
+                destExampleSrcFilePath = this.destExampleSrcFilePathFromProjDir().slash,
+                mainDependencyLines = mainCtx.dependencyLines,
+                testDependencyLines = testCtx?.dependencyLines ?: emptyList(),
+                exampleMainFunction = exampleMainFunc,
+                exampleNonMainFunctions = exampleNonMainFunctions,
+                publicAPIs = mainCtx.publicTopLevelCompactElements.filter { it.isChainRoot() }
+            )
+        )
+
+    readMeFile.qWrite(readMeSrc, ifExists = ifFileExists.ifExistsReadeMeFile)
+
+    return readMeFile
+}
+
+// << Root of the CallChain >>
+fun QCompactLib.createStat(
+    version: String,
+    mainCtx: QAnalysisContext,
+    testCtx: QAnalysisContext?,
+    destMainSingleFile: Path?,
+    destTestSingleFile: Path?,
+    mainSingleSrcBase: QSingleSrcBase
+): QCompactLibStat {
+
+    val statFile = destProjDir.resolve("stat.txt")
+
+    val chainNodeCount = """
+        # chain node hit count [main]
+${mainCtx.nodeHitCount(10).qNiceIndent(2, false)}
+
+        ${
+        if (testCtx != null && testCtx.nodeHitCount.isNotEmpty()) {
+            """
+                # chain node hit count [test]
+${testCtx.nodeHitCount(10).qNiceIndent(4, false)}
+                """.qNiceIndent(2)
+        } else {
+            ""
+        }
+    }""".trimIndent()
+
+    val mainNumberOfRootOfChainNodes = mainCtx.rootOfChainNode.size
+    val mainNumberOfMarkedNodes = mainCtx.markedNodes.size
+    val mainNumberOfAllNodes = mainCtx.callChainNodes.size
+    val mainSingleSrcFileNumberOfLines = destMainSingleFile?.qNumberOfLines() ?: -1
+    val mainSplitSrcNumberOfFiles = mainCtx.splitFiles.size
+    val testNumberOfRootOfChainNodes = testCtx?.rootOfChainNode?.size ?: -1
+    val testNumberOfMarkedNodes = testCtx?.markedNodes?.size ?: -1
+    val testNumberOfAllNodes = testCtx?.callChainNodes?.size ?: -1
+    val testSingleSrcFileNumberOfLines = destTestSingleFile?.qNumberOfLines() ?: -1
+    val testSplitSrcNumberOfFiles = testCtx?.splitFiles?.size ?: -1
+
+    val stat = QCompactLibStat(
+        statFile = statFile,
+        mainPublicAPIs = mainCtx.publicTopLevelCompactElements,
+        mainNumberOfRootOfChainNodes = mainNumberOfRootOfChainNodes,
+        mainNumberOfMarkedNodes = mainNumberOfMarkedNodes,
+        mainSingleSrcFileNumberOfLines = mainSingleSrcFileNumberOfLines,
+        mainSplitSrcNumberOfFiles = mainSplitSrcNumberOfFiles,
+        mainNumberOfAllNodes = mainNumberOfAllNodes,
+        testNumberOfRootOfChainNodes = testNumberOfRootOfChainNodes,
+        testNumberOfMarkedNodes = testNumberOfMarkedNodes,
+        testSingleSrcFileNumberOfLines = testSingleSrcFileNumberOfLines,
+        testSplitSrcNumberOfFiles = testSplitSrcNumberOfFiles,
+        testNumberOfAllNodes = testNumberOfAllNodes,
+    )
+
+    mainNumberOfMarkedNodes.logGreen
+    mainSingleSrcFileNumberOfLines.logGreen
+
+    statFile.qWrite(
+        "Version: $version\n\n" + stat.toString() + "\n\n" + chainNodeCount.noStyle,
+        ifExists = QIfExistsWrite.OverwriteAtomic
+    )
+
+    return stat
+}
+
+// << Root of the CallChain >>
 private fun Path?.qReadCodeExamples(charset: Charset): List<QFuncSrc> {
-    if( this == null )
+    if (this == null)
         return emptyList()
 
     val fileContent = this.qReadFile(charset)
@@ -1284,8 +1468,6 @@ private fun QCompactLib.createBuildGradleKts(
         mainSplitMainClass = mainCtx.mainClassFqName(),
         testSplitMainClass = testCtx?.mainClassFqName() ?: "",
         exampleMainClass = this.exampleMainClassFqName(),
-        gitHubUserName = this.gitHubUserName,
-        gitHubRepoName = this.gitHubRepoName
     )
     val gradleSrc = this.buildGradleKts(gradleScope)
 
@@ -1306,25 +1488,25 @@ private fun qCreateSplitSrcFiles(ctx: QAnalysisContext) {
 // << Root of the CallChain >>
 suspend fun qCompactLib(
     libName: String,
-    baseFileName: String,
     author: String,
     block: QCompactLibScope.() -> Unit
 ): QCompactLibResult {
-    val builder = QCompactLibScope(
-        libName = libName,
-        baseFileName = baseFileName,
-        author = author
-    )
+    return qTimeIt("Create Compact Library : $libName") {
+        val builder = QCompactLibScope(
+            libName = libName,
+            author = author
+        )
 
-//    builder.nextVersion(nextVersion)
+        builder.block()
 
-    builder.block()
+        val lib = builder.qInvokeBuild() as QCompactLib
 
-    val lib = builder.qInvokeBuild() as QCompactLib
+        val result = lib.createLibrary()
 
-    lib.exampleSrcFile
+        lib.phase.nextPhase(QLibPhase.End)
 
-    return lib.createLibrary()
+        result
+    }.result
 }
 
 // << Root of the CallChain >>
@@ -1390,7 +1572,8 @@ private fun qRegisterRootOfChain(analysisCtx: QAnalysisContext): List<QTopLevelC
 
 // << Root of the CallChain >>
 private fun qCreateSingleSrcBase(
-    analysisCtx: QAnalysisContext
+    analysisCtx: QAnalysisContext,
+    lisenceScope: QLicenseScope
 ): QSingleSrcBase {
     val srcSet = if (analysisCtx.isTest) QSrcSetType.TestSingle else QSrcSetType.MainSingle
 
@@ -1410,11 +1593,11 @@ private fun qCreateSingleSrcBase(
 
     val lib = analysisCtx.lib
 
-    val compactElements = analysisCtx.markedTopLevelCompactElements
+    val topLevelCompactElements = analysisCtx.markedTopLevelCompactElements
 
-    val fileAnnotation = lib.singleFileAnnotation(QSingleFileAnnotationCreationScope(analysisCtx))
+    val fileAnnotation = lib.singleFileAnnotation(QSingleFileAnnotationCreationScope(analysisCtx, analysisCtx.isTest))
 
-    val headerComment = lib.srcHeader
+    val headerComment = lib.srcHeader(lisenceScope)
 
     val beforeImports = if (headerComment.isNotEmpty() && fileAnnotation.isNotEmpty()) {
         headerComment + "\n\n" + fileAnnotation
@@ -1425,29 +1608,10 @@ private fun qCreateSingleSrcBase(
     }
 
     val compactElementsFromRootAPIFiles =
-        compactElements.filter { it.isChainRoot() && it.topLevelElement !is KtFileAnnotationList }
+        topLevelCompactElements.filter { it.isChainRoot() && it.topLevelElement !is KtFileAnnotationList }
 
     val compactElementsFromNonRootAPIFiles =
-        compactElements.filter { !it.isChainRoot() && it.topLevelElement !is KtFileAnnotationList }
-
-    val publicOrInternalTopLevelElements = compactElements.filter { topLevelEle ->
-        when (
-            lib.srcCode.visibilityChange(
-                QVisibilityChangeScope(topLevelEle, analysisCtx, srcSet)
-            )
-        ) {
-            QKtVisibilityChange.ToPrivate ->
-                false
-
-            QKtVisibilityChange.NoChange -> {
-                val visibility = topLevelEle.topLevelElement.qVisibility()
-                visibility == QKtVisibility.Public || visibility == QKtVisibility.Internal
-            }
-
-            else ->
-                true
-        }
-    }.map { it.topLevelElement }.toMutableList()
+        topLevelCompactElements.filter { !it.isChainRoot() && it.topLevelElement !is KtFileAnnotationList }
 
     val srcFromRootAPIFiles = compactElementsFromRootAPIFiles.sortedWith(lib.topLevelElementsSorter)
         .joinToString("\n\n") { compactEle ->
@@ -1479,10 +1643,6 @@ private fun qCreateSingleSrcBase(
         }
     }
 
-//    dependencies.size.log
-//
-//    dependencies.joinToString(", ").log
-
     return QSingleSrcBase(
         analysisCtx = analysisCtx,
         destFileName = if (!analysisCtx.isTest) lib.destMainSrcFileName else lib.destTestSrcFileName,
@@ -1491,7 +1651,7 @@ private fun qCreateSingleSrcBase(
         importPaths = allImports,
         srcFromRootAPIFiles = srcFromRootAPIFiles.trim(),
         srcFromNonRootAPIFiles = srcFromNonRootAPIFiles.trim(),
-        publicOrInternalTopLevelElements = publicOrInternalTopLevelElements,
+        topLevelElements = topLevelCompactElements,
         dependencies = dependencies,
         isTest = analysisCtx.isTest,
         lineSeparator = "\n"
@@ -1507,7 +1667,7 @@ data class QSingleSrcBase internal constructor(
     val importPaths: List<String>,
     val srcFromRootAPIFiles: String,
     val srcFromNonRootAPIFiles: String,
-    val publicOrInternalTopLevelElements: List<KtElement>,
+    val topLevelElements: List<QTopLevelCompactElement>,
     val dependencies: List<QDep>,
     val isTest: Boolean,
     val lineSeparator: String,
@@ -1553,8 +1713,6 @@ fun KtFile.qSrcBeforeImports(br: String = "\n"): String {
         if (ele.text.isBlank()) return@filter false
 
         if (ele is KtElement) {
-//            if (!elementFilter(ele, QSrcLevel.Top)) return@filter false
-
             if (ele is KtImportDirective) return@filter false
         }
 

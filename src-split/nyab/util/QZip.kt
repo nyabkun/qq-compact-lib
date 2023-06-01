@@ -35,7 +35,7 @@ import nyab.match.QM
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
-// CallChain[size=8] = Path.qCreateZip() <-[Call]- QBackupFile.createBackup() <-[Call]- QBackupHelpe ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=8] = Path.qCreateZip() <-[Call]- QBackupFile.createBackup() <-[Call]- QBackupHelpe ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qCreateZip(
     destZipFile: Path = this.qWithNewExtension("zip"),
     ifExistsCreate: QIfExistsCreate = QIfExistsCreate.RaiseException,

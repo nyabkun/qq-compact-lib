@@ -69,7 +69,7 @@ enum class QKtVisibilityChange {
 enum class QChainNodeVisitResult {
     // << Root of the CallChain >>
     /**
-     * This node is the target API we want to use directly in the user code.
+     * This node is the public API we want to use directly in the user code.
      * This node is the root of the call chain.
      */
     RootOfChain,
@@ -195,13 +195,17 @@ enum class QLibPhase {
     // << Root of the CallChain >>
     CreateLicense,
     // << Root of the CallChain >>
-    CreateChainNodeCount,
+    CreateVersionFile,
+    // << Root of the CallChain >>
+    CreateJitpackYmlFile,
+    // << Root of the CallChain >>
+    CreateStat,
     // << Root of the CallChain >>
     CreateReadme,
     // << Root of the CallChain >>
     Result,
     // << Root of the CallChain >>
-    FinishTask
+    End;
 }
 
 // << Root of the CallChain >>
@@ -225,5 +229,7 @@ enum class QAnalysisPhase {
     // << Root of the CallChain >>
     CreateSingleSrc,
     // << Root of the CallChain >>
-    CreateSplitSrc
+    CreateSplitSrc,
+    // << Root of the CallChain >>
+    End
 }

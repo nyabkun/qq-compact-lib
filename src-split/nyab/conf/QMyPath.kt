@@ -30,7 +30,7 @@ import nyab.util.sep
 internal object QMyPath {
     // -- dirs
 
-    // CallChain[size=4] = QMyPath.root <-[Call]- Path.qRelativeFrom() <-[Call]- QGit.gh_release_create() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=10] = QMyPath.root <-[Call]- Path.qRelativeTo() <-[Call]- Path.qCreateZip() <-[Cal ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     val root = "".path
     // CallChain[size=8] = QMyPath.src <-[Call]- QMyPath.src_root <-[Call]- qLogStackFrames() <-[Call]-  ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     val src = "src".path
@@ -46,19 +46,19 @@ internal object QMyPath {
     val src_config = "src-config".path
     // CallChain[size=8] = QMyPath.src_test <-[Call]- QMyPath.src_root <-[Call]- qLogStackFrames() <-[Ca ...  QException.QException() <-[Ref]- QE.throwIt() <-[Call]- QTopLevelCompactElement.toSrcCode()[Root]
     val src_test = "src-test".path
-    // CallChain[size=8] = QMyPath.rsc <-[Call]- QMyPath.base <-[Call]- Path.qBaseDir() <-[Call]- Path.q ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=8] = QMyPath.rsc <-[Call]- QMyPath.base <-[Call]- Path.qBaseDir() <-[Call]- Path.q ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     val rsc = "rsc".path
-    // CallChain[size=6] = QMyPath.temp <-[Call]- Path.qWithBaseDir() <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=6] = QMyPath.temp <-[Call]- Path.qWithBaseDir() <-[Call]- Path.qTryBackup() <-[Cal ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     val temp = ".q_temp".path
-    // CallChain[size=8] = QMyPath.desktop <-[Call]- QMyPath.base <-[Call]- Path.qBaseDir() <-[Call]- Pa ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=8] = QMyPath.desktop <-[Call]- QMyPath.base <-[Call]- Path.qBaseDir() <-[Call]- Pa ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     val desktop = (System.getProperty("user.home") + "/Desktop").path
-    // CallChain[size=6] = QMyPath.user <-[Call]- QMyPath.backup <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=6] = QMyPath.user <-[Call]- QMyPath.backup <-[Call]- Path.qTryBackup() <-[Call]- P ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     val user = "user".path
-    // CallChain[size=8] = QMyPath.app <-[Call]- QMyPath.base <-[Call]- Path.qBaseDir() <-[Call]- Path.q ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=8] = QMyPath.app <-[Call]- QMyPath.base <-[Call]- Path.qBaseDir() <-[Call]- Path.q ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     val app = "app".path
     // CallChain[size=2] = QMyPath.compact <-[Call]- QCompactLibScope.destProjDir[Root]
     val compact = "compact".path
-    // CallChain[size=5] = QMyPath.backup <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=5] = QMyPath.backup <-[Call]- Path.qTryBackup() <-[Call]- Path.qWrite() <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     val backup = user sep ".q_backup"
 
     // --- dir list
@@ -87,7 +87,7 @@ internal object QMyPath {
         (base + search).distinct()
     }
 
-    // CallChain[size=7] = QMyPath.base <-[Call]- Path.qBaseDir() <-[Call]- Path.qWithBaseDir() <-[Call] ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=7] = QMyPath.base <-[Call]- Path.qBaseDir() <-[Call]- Path.qWithBaseDir() <-[Call] ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     val base: List<Path> by lazy {
         val list: MutableList<Path> = mutableListOf()
         list.add(root)

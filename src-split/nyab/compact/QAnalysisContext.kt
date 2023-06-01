@@ -12,6 +12,7 @@ package nyab.compact
 
 import java.nio.file.Path
 import nyab.util.QMapCount
+import nyab.util.QShColor
 import nyab.util.qCacheIt
 import nyab.util.qUnreachable
 import org.jetbrains.kotlin.psi.KtFile
@@ -32,7 +33,18 @@ class QAnalysisContext(
     val chainStoppers: Set<QKtElementKey>,
 ) {
     // << Root of the CallChain >>
-    val phase = QPhase(QAnalysisPhase::class)
+    val phase = QPhase(
+        QAnalysisPhase::class, if (isTest) {
+            QAnalysisPhase::class.simpleName!! + "[test]"
+        } else {
+            QAnalysisPhase::class.simpleName!! + "[main]"
+        },
+        fg = if( isTest ) {
+            QShColor.Cyan
+        } else {
+            QShColor.Green
+        }
+    )
 
     // << Root of the CallChain >>
     val analysis = QCompactLibAnalysis(this, lib, isTest)
@@ -103,6 +115,11 @@ class QAnalysisContext(
     lateinit var markedTopLevelCompactElements: List<QTopLevelCompactElement>
 
     // << Root of the CallChain >>
+    val publicTopLevelCompactElements: List<QTopLevelCompactElement> by lazy {
+        markedTopLevelCompactElements.filter { it.finalVisibility(QSrcSetType.MainSplit ) == QKtVisibility.Public }.sortedBy { it.type.ordinal }
+    }
+
+    // << Root of the CallChain >>
     lateinit var splitFiles: Map<String, QSplitFile>
 
     // << Root of the CallChain >>
@@ -120,12 +137,6 @@ class QAnalysisContext(
                 realNameToAliasName[realType] = alias.substringAfterLast('.')
             } else {
                 qUnreachable(it.text)
-            }
-        }
-
-        for(ktFile in ktFiles) {
-            for(topLevel in ktFile.children) {
-
             }
         }
     }
@@ -210,9 +221,9 @@ class QAnalysisContext(
             it.filePath
         }
 
-        for(node in markedNodes.values) {
-            for( chainedNode in node.chainNodesFromRoot() ) {
-                if( chainedNode == node )
+        for (node in markedNodes.values) {
+            for (chainedNode in node.chainNodesFromRoot()) {
+                if (chainedNode == node)
                     continue
 
                 nodeHitCount += chainedNode

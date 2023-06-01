@@ -11,7 +11,6 @@
 package nyab.compact
 
 import nyab.util.QGit
-import nyab.util.log
 
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
@@ -24,7 +23,6 @@ internal suspend fun QCompactLib.gradleWrapper() {
 // << Root of the CallChain >>
 internal suspend fun QCompactLib.gradleBuild(): Boolean {
     val result = runCommand("gradlew build")
-    result.output.log
     return result.success
 }
 

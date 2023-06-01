@@ -109,14 +109,14 @@ internal object QMyCompactLibGradle {
                                 val jarFile = "${"$"}buildDir/libs/${"$"}qMavenArtifactId-${"$"}version.jar"
                                 compileClasspath += files(jarFile)
                                 runtimeClasspath += files(jarFile)
-                            """.trimIndent()
+                            """.qNiceIndent(5)
                         } else {
                             """
                                 java.srcDirs(
                                     "${lib.destProjDir.relativize(lib.destSplitMainDir).slash}",
                                     "${lib.destProjDir.relativize(lib.destExampleDir).slash}"
                                 )
-                            """.trimIndent()
+                            """.qNiceIndent(5)
                         }
                     }
                 
@@ -182,7 +182,7 @@ internal object QMyCompactLibGradle {
                         val testSingleRuntimeOnly: Configuration by configurations.getting {
                             extendsFrom(configurations.testRuntimeOnly.get())
                         }
-                    """.trimIndent()
+                    """.qNiceIndent(3)
                 } else {
                     ""
                 }
@@ -227,13 +227,13 @@ internal object QMyCompactLibGradle {
 
         val testDependsOn = mutableListOf<String>()
 
-        if (lib.createSingleFileSrc && testSingleMainClass.isNotEmpty()) {
+        if (lib.createSingleFileSrc && testSingleMainClass.isNotEmpty() && lib.runTest ) {
             testDependsOn += "dependsOn(\"qRunTestSingle\")"
         }
-        if (testSplitMainClass.isNotEmpty()) {
+        if (testSplitMainClass.isNotEmpty() && lib.runTest ) {
             testDependsOn += "dependsOn(\"qRunTestSplit\")"
         }
-        if (exampleMainClass.isNotEmpty()) {
+        if (exampleMainClass.isNotEmpty() && lib.runExample ) {
             testDependsOn += "dependsOn(\"qRunExample\")"
         }
 
@@ -337,9 +337,9 @@ internal object QMyCompactLibGradle {
                 //      // GitHub Packages
                 //      repositories {
                 //          maven {
-                //              url = uri("https://maven.pkg.github.com/$gitHubUserName/$gitHubRepoName")
+                //              url = uri("https://maven.pkg.github.com/${lib.gitHubUserName}/${lib.gitHubRepoName}")
                 //              credentials {
-                //                  username = "$gitHubUserName"
+                //                  username = "${lib.gitHubUserName}"
                 //                  password = File("../../.q_gpr.key").readText(Charsets.UTF_8).trim()
                 //              }
                 //          }

@@ -30,17 +30,17 @@ import nyab.util.slash
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
-// CallChain[size=9] = qKWD_BACKUP <-[Call]- QBackupHelper.backupPath() <-[Call]- QBackupHelper.newB ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=9] = qKWD_BACKUP <-[Call]- QBackupHelper.backupPath() <-[Call]- QBackupHelper.newB ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal const val qKWD_BACKUP = "BACKUP"
 
-// CallChain[size=8] = Path.qListBackupFiles() <-[Call]- QBackupHelper.listBackupFilesExisting() <-[ ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=8] = Path.qListBackupFiles() <-[Call]- QBackupHelper.listBackupFilesExisting() <-[ ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qListBackupFiles(orgFileOrDir: Path): List<Path> {
     return qListRecursive(QFType.FileOrDir) { file ->
         file.qIsBackupFileOf(orgFileOrDir)
     }
 }
 
-// CallChain[size=9] = Path.qIsBackupFileOf() <-[Call]- Path.qListBackupFiles() <-[Call]- QBackupHel ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=9] = Path.qIsBackupFileOf() <-[Call]- Path.qListBackupFiles() <-[Call]- QBackupHel ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal fun Path.qIsBackupFileOf(org: Path): Boolean {
     if (!name.startsWith("${org.nameWithoutExtension}.$qKWD_BACKUP="))
         return false
@@ -54,17 +54,17 @@ internal fun Path.qIsBackupFileOf(org: Path): Boolean {
     return true
 }
 
-// CallChain[size=7] = QBackupFile <-[Ref]- QBackupHelper.fillSlots() <-[Call]- QBackupHelper.tryBac ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+// CallChain[size=7] = QBackupFile <-[Ref]- QBackupHelper.fillSlots() <-[Call]- QBackupHelper.tryBac ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
 internal class QBackupFile(val backupFile: Path, var notYetCreated: Boolean) {
 
-    // CallChain[size=8] = QBackupFile.deleted <-[Call]- QBackupFile.delete() <-[Call]- QBackupHelper.fi ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=8] = QBackupFile.deleted <-[Call]- QBackupFile.delete() <-[Call]- QBackupHelper.fi ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     private var deleted: Boolean = false
 
-    // CallChain[size=7] = QBackupFile.backupDate <-[Call]- QBackupHelper.fillSlots() <-[Call]- QBackupH ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=7] = QBackupFile.backupDate <-[Call]- QBackupHelper.fillSlots() <-[Call]- QBackupH ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     val backupDate: Long
         get() = backupFile.qDateTime()
 
-    // CallChain[size=7] = QBackupFile.createBackup() <-[Call]- QBackupHelper.fillSlots() <-[Call]- QBac ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=7] = QBackupFile.createBackup() <-[Call]- QBackupHelper.fillSlots() <-[Call]- QBac ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     fun createBackup(orgFile: Path): Boolean {
         if (!notYetCreated) return false
         if (backupFile.exists()) return false
@@ -86,7 +86,7 @@ internal class QBackupFile(val backupFile: Path, var notYetCreated: Boolean) {
         return true
     }
 
-    // CallChain[size=7] = QBackupFile.delete() <-[Call]- QBackupHelper.fillSlots() <-[Call]- QBackupHel ... ckup() <-[Call]- Path.qWrite() <-[Call]- QGit.init() <-[Call]- QCompactLibResult.doGitTask()[Root]
+    // CallChain[size=7] = QBackupFile.delete() <-[Call]- QBackupHelper.fillSlots() <-[Call]- QBackupHel ... ) <-[Call]- Path.qConvertContent() <-[Call]- QCompactLibRepositoryTask.updateReadmeVersion()[Root]
     fun delete() {
         if (deleted) return
 

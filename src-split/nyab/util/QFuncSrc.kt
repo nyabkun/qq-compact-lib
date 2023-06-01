@@ -10,13 +10,16 @@
 
 package nyab.util
 
+import java.nio.file.Path
+import kotlin.io.path.useLines
+
 // qq-compact-lib is a self-contained single-file library created by nyabkun.
 // This is a split-file version of the library, this file is not self-contained.
 
 // CallChain[size=2] = QFuncSrc <-[Ref]- QReadmeScope[Root]
 data class QFuncSrc(val name: String, val entireSrc: String, val typeParam: String?, val params: String, val returnType: String?, val body: String)
 
-// CallChain[size=2] = String.qGetTopLevelFunctionsQuickAndDirty() <-[Call]- Path?.qReadCodeExamples()[Root]
+// CallChain[size=2] = String.qGetTopLevelFunctionsQuickAndDirty() <-[Call]- Path.qReadCodeExamples()[Root]
 internal fun String.qGetTopLevelFunctionsQuickAndDirty(): List<QFuncSrc> {
     val maskResult = QMask.PARAMS_AND_CONTENT_OF_FUNC.apply(this)
 
