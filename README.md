@@ -28,7 +28,7 @@ This library itself is also extracted portions of my codebase.
 
 ## Code Example
 
-When you run the `gralde qRunExample` command in this repository, it analyzes the sample source code under the [rsc-test/src](rsc-test/src) directory and creates a compact library that contains only the necessary classes and functions.
+When you run the `gralde qRunExample` command in this repository, it analyzes the sample source code under the [rsc-test/src](rsc-test/src) directory and creates a compact library that contains only required portions to say `Hello World`.
 
 ```kotlin
 fun main(): Unit = runBlocking {

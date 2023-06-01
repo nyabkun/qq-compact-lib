@@ -40,7 +40,7 @@ private class ChaoticClass {
 
 // CallChain[size=3] = justSayHello() <-[Call]- ChaoticClass.sayHello() <-[Call]- CompactHelloWorld.hello()[Root]
 private fun justSayHello() {
-    println("Hello")
+    println("Hello World")
 }
 
 
